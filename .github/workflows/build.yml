@@ -1,0 +1,34 @@
+name: Build and Run
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 0
+
+      - name: Initialize submodules
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+      - name: Build Docker image
+        run: |
+          docker build -t odp-docker:latest -f .devcontainer/Dockerfile .
+
+      - name: Run make inside the container
+        run: |
+          docker run --rm \
+            -u $(id -u):$(id -g) \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            odp-docker:latest \
+            make

@@ -1,63 +1,111 @@
-# embedded-rust-template
-Template repository for Embedded Rust development
+# odp-platform-qemu-sbsa
+This repo contains all the necessary content for working on QEMU for SBSA (arm64) platform
 
-## Customizing This Template
+## Quick Start Guide
+This configuration has been tested on a windows running WSL Ubuntu 24.04 with Visual Studio Code.
 
-### Changing the Target Architecture
+After cloning the repository locally to WSL make sure from Visual Studio Code you have the WSL extension
+installed to allow you to open code from terminal.
 
-This template is configured for `thumbv8m.main-none-eabihf`, by default, but you can modify it for other targets (i.e. `aarch64-unknown-none`):
+From the root folder run `code .` to start new VS code session. 
+When prompted select to re-open in a container which will setup all the required tools and packages.
 
-1. **VSCode Settings**: Update the target in `.vscode/settings.json`:
-   ```json
-   "rust-analyzer.cargo.target": "your-target-architecture"
-   ```
+From VS code select `New Terminal` and run  `./build.sh` from the root to rebuild all components.
 
+Each sub folder has its own build.sh script to build each subcomponent.
 
-This configuration ensures that:
-- Only the specified target architecture is analyzed, not the host platform
-- Code is checked against the no_std environment
+## Folder Structure and Content
 
-To temporarily analyze code for the host platform instead, you can remove the `rust-analyzer.cargo.target` setting.
-
-2. **GitHub Workflows**: Modify the target in two workflow files:
-   - `.github/workflows/nostd.yml`: Update the targets in the matrix:
-     ```yaml
-     matrix:
-       target: [your-target-architecture]
-     ```
-   - `.github/workflows/check.yml`: If there are any target-specific checks, update them accordingly.
-
-3. **Cargo Configuration**: If needed, you can add target-specific configuration in a `.cargo/config.toml` file.
-
-### Converting from Binary to Library
-
-To convert this project from a binary to a library:
-
-1. **Cargo.toml**: Update your project structure:
-   ```toml
-   [lib]
-   name = "your_library_name"
-   ```
-
-2. **Directory Structure**:
-   - For a library, ensure you have a `src/lib.rs` file instead of `src/main.rs`
-   - Move your code from `main.rs` to `lib.rs` and adjust as needed
-
-3. **No-std Configuration**: If you're creating a no-std library, ensure you have:
-   ```rust
-   // In lib.rs
-   #![cfg_attr(target_os = "none", no_std)]
-   // Add other attributes as needed
-   ```
-
-### Project Dependencies
-
-Update the dependencies in `Cargo.toml` based on your target platform:
-
-```toml
-[dependencies]
-# Common dependencies for all targets
-
-[target.'cfg(target_os = "none")'.dependencies]
-# Dependencies for no-std targets
+```
+odp-platform-<vendor>-<name>          Example: odp-platform-QEMU-SBSA
+  |- .github/           Folder containing all github support (CI/CD)
+  |- build/             Folder created by /build.sh
+     |- uefi               output from the uefi build
+     |- tf-a               output from the tf-a build
+     |- (...)              output from component builds
+  |- uefi/              Folder to compile the UEFI
+     |- <core>            (SUBMODULE) Core infrastructure submodules
+                          Example: tianocore/edk2/
+     |- <silicon>         (SUBMODULE) Silicon vendor code submodules
+     |- <vendor>          (SUBMODULE) Platform vendor code submodules
+     |- tools/            Optional directory for tools that need to be compiled
+        |- <tool_1>/          (SUBMODULE) Tool code needed to build component
+        |- <tool_2>/          (SUBMODULE) Tool code needed to build component
+     |- platform/         Platform config specific to UEFI
+     |- build/            Optional folder for output from this component’s build
+     |- build.sh          Script to build and produce the uefi binary
+                          (use envvar to route artifacts to local or root build dir)
+     |- readme.md         Misc housekeeping files
+  |- tf-a/              Folder to compile the TF-A
+     |- <core>            (SUBMODULE) Core infrastructure submodules
+                          Example: trusted-firmware-a/
+     |- <silicon>         (SUBMODULE) Silicon vendor code submodules
+     |- <vendor>          (SUBMODULE) Platform vendor code submodules
+     |- platform/         Platform config specific to TF-A
+     |- tools/            Optional directory for tools that need to be compiled
+     |- build.sh          Script to build and produce the TF-A binary
+                          (use envvar to route artifacts to local or root build dir)
+     |- readme.md         Misc housekeeping files
+  |- spm                  Folder to compile the secure partition manager
+     |- <core>            (SUBMODULE) Core infrastructure
+                          Example: trusted-firmware-a/
+     |- <silicon>         (SUBMODULE) Code provided by silicon vendor
+     |- <vendor>          (SUBMODULE) Code provided by platform vendor
+     |- platform/         Platform config specific to Hafnium
+     |- tools/            Optional directory for tools that need to be compiled
+     |- build/            Optional folder for output from this component’s build
+     |- build.sh          Builds and produces the binary
+                          (use envvar to route artifacts to local or root build dir)
+     |- readme.md         Misc housekeeping files
+  |- ec                 Folder to compile the EC
+     |- <core>            (SUBMODULE) Core infrastructure
+     |- <silicon>         (SUBMODULE) Code provided by silicon vendor
+     |- <vendor>          (SUBMODULE) Code provided by platform vendor
+     |- tools/            Optional directory for tools that need to be compiled
+     |- platform/         Platform config specific to the EC
+     |- build/            Optional folder for output from this component’s build
+     |- build.sh          Builds and produces the binary
+                          (use envvar to route artifacts to local or root build dir)
+     |- readme.md         Misc housekeeping files
+  |- acpi               Folder to compile the ACPI
+     |- <common>          (SUBMODULE/Nuget) Is there common code we can use?
+     |- DSDT/             Platform code for the DSDT table
+     |- <table(n)>/       Platform code for the (n) table
+     |- tools/            Optional directory for tools that need to be compiled
+     |- build/            Optional folder for output from this component’s build
+     |- build.sh          Builds and produces the binary
+                          (use envvar to route artifacts to local or root build dir)
+     |- readme.md         Misc housekeeping files
+  |- secure-partition   Folder to create the secure partition binary
+     |- <item 1>          (SUBMODULE/Nuget) Example: EC Service binary
+     |- <item 2>          (SUBMODULE/Nuget) Example: Version Manifest builder
+     |- tools/            Optional directory for tools that need to be compiled
+     |- platform/         Platform config specific to the secure partition
+     |- build/            Optional folder for output from this component’s build
+     |- build.sh          Builds and produces the binary
+                          (use envvar to route artifacts to local or root build dir)
+     |- readme.md         Misc housekeeping files
+  |- os-image           Folder to create the OS image
+     |- <item (n)>        (SUBMODULE/Nuget) Pre-existing feed if needed
+     |- tools/            Optional directory for tools that need to be compiled
+     |- platform/         Platform config specific to the OS image
+     |- os_drop/          Place holder for install.wim and OS content from EEAP
+     |- drivers/          Platform specific drivers
+     |- build/            Optional folder for output from this component’s build
+     |- build.sh          Injects drivers into install.wim to create disk image
+                          (use envvar to route artifacts to local or root build dir)
+     |- readme.md         Misc housekeeping files
+  |- common/            Folder to hold code common to all components
+     |- platform/         Do we want a single config for all components? Device Tree?
+     |- odp-sdk/          (SUBMODULE) Common ODP SDK code
+     |- tools/            Optional directory for tools that need to be compiled
+        |- <tool_1>/          (SUBMODULE) Tool code needed to build component
+        |- <tool_2>/          (SUBMODULE) Tool code needed to build component
+     |- container.json    Container config for CI/CD and build.sh
+     |- build/            Optional folder for output from any build time processing
+     |- build.sh          Build time processing of this folder
+                          (use envvar to route artifacts to local or root build dir)
+     |- readme.md         Misc housekeeping files
+  |- build.sh           Executes each component build.sh then the final binary
+  |- readme.md          Misc housekeeping files
 ```
