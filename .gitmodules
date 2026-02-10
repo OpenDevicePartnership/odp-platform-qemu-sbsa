@@ -1,0 +1,15 @@
+[submodule "tf-a/arm-trusted-firmware"]
+	path = tf-a/arm-trusted-firmware
+	url = https://github.com/ARM-software/arm-trusted-firmware.git
+[submodule "uefi/edk2"]
+	path = uefi/edk2
+	url = https://github.com/tianocore/edk2.git
+[submodule "uefi/edk2-non-osi"]
+	path = uefi/edk2-non-osi
+	url = https://github.com/tianocore/edk2-non-osi.git
+[submodule "uefi/edk2-platforms"]
+	path = uefi/edk2-platforms
+	url = https://github.com/tianocore/edk2-platforms.git
+[submodule "common/tools/qemu"]
+	path = common/tools/qemu
+	url = https://github.com/qemu/qemu.git
