@@ -1,10 +1,34 @@
-FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04
+FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04 AS qemu-builder
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libepoxy-dev \
+    libfdt-dev \
+    libglib2.0-dev \
+    libgtk-3-dev \
+    libpixman-1-dev \
+    pkg-config \
+    python3 \
+    python3-dev \
+    python3-pip \
+    python3-venv \
+    git \
+    wget \
+    tar \
+    gzip \
+    zlib1g-dev
+RUN pip install tomli ninja poetry
+RUN wget https://github.com/qemu/qemu/archive/refs/tags/v10.2.1.tar.gz -O /tmp/qemu.tar.gz
+RUN tar -xzf /tmp/qemu.tar.gz && \
+    cd qemu-10.2.1 && \
+    ./configure --target-list=aarch64-softmmu --enable-gtk && \
+    make -j$(nproc) && \
+    make install
 
+FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install base packages first
-RUN apt-get update && \
-    apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     lsb-release \
     wget \
     software-properties-common \
@@ -14,17 +38,49 @@ RUN apt-get update && \
 # Install LLVM repo
 RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" 20
 
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential git python3 python3-dev python3-pip python3-venv flex bison nasm iasl uuid-dev uuid-runtime \
-    qemu-utils wget curl ca-certificates pkg-config libssl-dev libncurses5-dev make \
-    gcc-aarch64-linux-gnu g++-aarch64-linux-gnu gcc-arm-none-eabi binutils-aarch64-linux-gnu \
-    crossbuild-essential-arm64 libc6-dev-arm64-cross libfdt-dev device-tree-compiler \
-    seabios ovmf qemu-efi libglib2.0-dev libgtk-3-dev libepoxy-dev llvm lld \
-    && rm -rf /var/lib/apt/lists/*
+    binutils-aarch64-linux-gnu \
+    bison \
+    build-essential \
+    ca-certificates \
+    crossbuild-essential-arm64 \
+    device-tree-compiler \
+    flex \
+    g++-aarch64-linux-gnu \
+    gcc-aarch64-linux-gnu \
+    gcc-arm-none-eabi \
+    git \
+    iasl \
+    libc6-dev-arm64-cross \
+    libepoxy-dev \
+    libfdt-dev \
+    libglib2.0-dev \
+    libgtk-3-dev \
+    libncurses5-dev \
+    libssl-dev \
+    lld \
+    llvm \
+    make \
+    nasm \
+    ovmf \
+    pkg-config \
+    python3 \
+    python3-dev \
+    python3-pip \
+    python3-venv \
+    qemu-efi \
+    qemu-utils \
+    seabios \
+    uuid-dev \
+    uuid-runtime
 
 RUN pip install tomli ninja poetry
 
-WORKDIR /workspaces/odp-platform-qemu-sbsa
+# Install QEMU 10 from builder image
+COPY --from=qemu-builder /usr/local/bin/qemu-system-aarch64 /usr/local/bin/qemu-system-aarch64
+COPY --from=qemu-builder /usr/local/bin/qemu-img /usr/local/bin/qemu-img
+COPY --from=qemu-builder /usr/local/share/qemu /usr/local/share/qemu
 
 # Setup Default Clang
 RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-20 200

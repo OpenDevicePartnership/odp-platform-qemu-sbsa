@@ -3,7 +3,6 @@
 # ------------------------------------------------------------
 WORKSPACE ?= $(CURDIR)
 
-QEMU_DIR     := $(WORKSPACE)/common/tools/emulators
 HAFNIUM_DIR  := $(WORKSPACE)/spm
 TFA_DIR      := $(WORKSPACE)/tf-a
 UEFI_DIR     := $(WORKSPACE)/uefi
@@ -11,14 +10,7 @@ UEFI_DIR     := $(WORKSPACE)/uefi
 # ------------------------------------------------------------
 # Default target
 # ------------------------------------------------------------
-all: qemu hafnium tfa uefi
-
-# ------------------------------------------------------------
-# Build QEMU
-# ------------------------------------------------------------
-qemu:
-	@echo "=== Building QEMU ==="
-	$(MAKE) -C $(QEMU_DIR)
+all: hafnium tfa uefi
 
 # ------------------------------------------------------------
 # Build Hafnium
@@ -46,9 +38,8 @@ uefi:
 # ------------------------------------------------------------
 clean:
 	@echo "=== Cleaning all components ==="
-	$(MAKE) -C $(QEMU_DIR) clean
 	$(MAKE) -C $(HAFNIUM_DIR) clean
 	$(MAKE) -C $(TFA_DIR) clean
 	$(MAKE) -C $(UEFI_DIR) clean
 
-.PHONY: all qemu hafnium tfa uefi clean
+.PHONY: all hafnium tfa uefi clean
