@@ -32,7 +32,7 @@ $(DTB_OUT): $(DTS_SRC)
 # ------------------------------------------------------------
 tfa-hafnium: $(DTB_OUT)
 	@echo "Building TF-A in $(TFA_ROOT)"
-	$(MAKE) -C $(TFA_ROOT) \
+	$(MAKE) -C $(TFA_ROOT) -j \
 		PLAT=qemu_sbsa \
  		BUILD_BASE=$(WORKSPACE)/Build/tfa \
 		SPD=spmd \
@@ -49,8 +49,8 @@ tfa-hafnium: $(DTB_OUT)
 # ------------------------------------------------------------
 # Optional: full FIP build (uncomment if needed)
 # ------------------------------------------------------------
-tfa: 
-	$(MAKE) -C $(TFA_ROOT) \
+tfa:
+	$(MAKE) -C $(TFA_ROOT) -j \
  		PLAT=qemu_sbsa \
  		BUILD_BASE=$(WORKSPACE)/Build/tfa \
  		DEBUG=1 \
