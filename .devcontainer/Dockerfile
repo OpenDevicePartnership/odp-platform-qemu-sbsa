@@ -28,9 +28,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install base packages first
-RUN --mount=type=cache,target=/var/cache/apt \
-    --mount=type=cache,target=/var/lib/apt/lists \
-    apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     lsb-release \
     wget \
     software-properties-common \
@@ -41,9 +39,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
 RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" 20
 
 # Install build dependencies
-RUN --mount=type=cache,target=/var/cache/apt \
-    --mount=type=cache,target=/var/lib/apt/lists \
-    apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     binutils-aarch64-linux-gnu \
     bison \
     build-essential \
