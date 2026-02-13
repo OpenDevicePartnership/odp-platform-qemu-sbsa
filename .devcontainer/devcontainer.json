@@ -1,0 +1,20 @@
+{
+  "name": "odp-platform-qemu-sbsa Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-python.python",
+        "ms-vscode.cmake-tools"
+      ]
+    }
+  },
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash"
+  },
+  "remoteUser": "vscode"
+}

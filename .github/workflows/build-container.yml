@@ -1,0 +1,13 @@
+name: Build Container
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t odp-docker:latest -f .devcontainer/Dockerfile .
