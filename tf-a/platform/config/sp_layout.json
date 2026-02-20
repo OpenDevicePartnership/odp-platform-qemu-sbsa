@@ -1,16 +1,16 @@
 {
-  "stmm": {
+  "ec-sp": {
     "image": {
-      "file": "stmm.fd",
+      "file": "qemu-ec-sp",
       "offset": "0x2000"
     },
     "pm": {
-      "file": "qemu_sbsa_stmm_config.dts",
+      "file": "qemu-ec-sp.dts",
       "offset": "0x1000"
     },
     "package": "tl_pkg",
     "uuid": "eaba83d8-baaf-4eaf-8144-f7fdcbe544a7",
     "owner": "Plat",
-    "size": "0x80000"
+    "size": "0x300000"
   }
 }

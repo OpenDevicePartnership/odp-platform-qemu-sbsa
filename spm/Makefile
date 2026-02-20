@@ -17,6 +17,7 @@ all: hafnium
 hafnium:
 	@echo "Building Hafnium for SBSA QEMU..."
 	@echo "HAFNIUM_ROOT = $(HAFNIUM_ROOT)"
+	cp -R $(WORKSPACE)/spm/platform/override/* $(HAFNIUM_ROOT)
 	$(MAKE) -C $(HAFNIUM_ROOT) PLATFORM=secure_qemu_aarch64
 
 # ------------------------------------------------------------

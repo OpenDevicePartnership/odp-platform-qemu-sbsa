@@ -5,10 +5,9 @@ WORKSPACE ?= $(CURDIR)/..
 
 UEFI_ROOT := $(WORKSPACE)/uefi
 VENV := $(WORKSPACE)/.venv
-PATCH_FILE := $(UEFI_ROOT)/platform/SbsaQemuHardwareInfoLib.diff
 PIP_FILE := $(UEFI_ROOT)/edk2/pip-requirements.txt
 PIP_STAMP := $(UEFI_ROOT)/.pip_installed.stamp
-UEFI_TFA_DIR := $(UEFI_ROOT)/edk2-platforms/Platform/Qemu/Sbsa
+UEFI_TFA_DIR := $(UEFI_ROOT)/edk2-non-osi/Platform/Qemu/Sbsa
 
 TFA_ROOT := $(WORKSPACE)/tf-a
 BL1_BIN := $(WORKSPACE)/Build/tfa/qemu_sbsa/debug/bl1.bin
@@ -32,9 +31,6 @@ all: edk2
 $(TFA_FILES):
 	@echo "Building TF-A"
 	$(MAKE) -C $(TFA_ROOT)
-	mkdir -p $(UEFI_TFA_DIR)
-	cp $(BL1_BIN) $(UEFI_TFA_DIR)
-	cp $(FIP_BIN) $(UEFI_TFA_DIR)
 
 # ------------------------------------------------------------
 # Depends for python
@@ -50,15 +46,6 @@ $(PIP_STAMP): $(PIP_FILE)
 	@touch $(PIP_STAMP)
 
 # ------------------------------------------------------------
-# 4. Apply patch if not already applied
-# ------------------------------------------------------------
-apply-patch:
-	@echo "Checking and applying patch..."
-	cd $(UEFI_ROOT)/edk2-platforms && \
-	git apply --check $(PATCH_FILE) && git apply $(PATCH_FILE) || \
-	echo "Patch already applied or not applicable."
-
-# ------------------------------------------------------------
 # 6. Source edksetup.sh
 # ------------------------------------------------------------
 basetools:
@@ -68,8 +55,12 @@ basetools:
 # ------------------------------------------------------------
 # 7. Build UEFI firmware
 # ------------------------------------------------------------
-edk2: pip-install apply-patch basetools $(TFA_FILES)
+edk2: pip-install basetools $(TFA_FILES)
 	@echo "Building UEFI SBSA QEMU firmware..."
+	cp -R $(WORKSPACE)/uefi/platform/override/* $(UEFI_ROOT)
+	mkdir -p $(UEFI_TFA_DIR)
+	cp $(BL1_BIN) $(UEFI_TFA_DIR)
+	cp $(FIP_BIN) $(UEFI_TFA_DIR)
 	@. $(VENV)/bin/activate && \
 		cd $(UEFI_ROOT)/edk2 && \
 		. ./edksetup.sh && \
@@ -84,4 +75,4 @@ clean:
 	@echo "Cleaning UEFI build output..."
 	rm -rf $(UEFI_ROOT)/Build
 
-.PHONY: all pip-install apply-patch edksetup edk2 clean
+.PHONY: all pip-install edksetup edk2 clean
