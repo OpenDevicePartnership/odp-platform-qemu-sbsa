@@ -16,7 +16,7 @@ truncate -s 256M $WORKSPACE/Build/SbsaQemu/SBSA_FLASH[01].fd
 # Run QEMU
 qemu-system-aarch64 \
     -machine sbsa-ref \
-    -cpu max \
+    -cpu max,sve=off \
     -display none \
     -m 1G \
     -smp 4 \

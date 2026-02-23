@@ -68,10 +68,4 @@
 
 	};
 
-  uart1: uart-proxy {
-    compatible = "qemu,uart-proxy";
-    reg = <0x0 0x60200000 0x0 0x1000>;
-    status = "okay";
-  };
-
 };
