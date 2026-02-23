@@ -57,7 +57,7 @@ basetools:
 # ------------------------------------------------------------
 edk2: pip-install basetools $(TFA_FILES)
 	@echo "Building UEFI SBSA QEMU firmware..."
-	cp -R $(WORKSPACE)/uefi/platform/override/* $(UEFI_ROOT)
+	rsync -a --update $(WORKSPACE)/uefi/platform/override/* $(UEFI_ROOT)
 	mkdir -p $(UEFI_TFA_DIR)
 	cp $(BL1_BIN) $(UEFI_TFA_DIR)
 	cp $(FIP_BIN) $(UEFI_TFA_DIR)

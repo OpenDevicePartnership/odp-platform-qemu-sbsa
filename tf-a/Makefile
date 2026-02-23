@@ -6,6 +6,7 @@ WORKSPACE ?= $(CURDIR)/..
 TFA_ROOT  := $(WORKSPACE)/tf-a/arm-trusted-firmware
 PLAT_CONFIG := $(WORKSPACE)/tf-a/platform/config
 SP_LAYOUT_FILE := $(PLAT_CONFIG)/sp_layout.json
+TMPDIR := $(WORKSPACE)/.tmp
 
 DTB_DIR := $(WORKSPACE)/Build/tfa/qemu_sbsa/debug/fdts/
 DTS_SRC := $(PLAT_CONFIG)/qemu-ec-sp.dts
@@ -13,6 +14,7 @@ DTB_OUT := $(DTB_DIR)/qemu-ec-sp.dtb
 
 export TFA_ROOT
 export SP_LAYOUT_FILE
+export TMPDIR
 
 # ------------------------------------------------------------
 # Default target
@@ -32,7 +34,8 @@ $(DTB_OUT): $(DTS_SRC)
 # ------------------------------------------------------------
 tfa-hafnium: $(DTB_OUT)
 	@echo "Building TF-A in $(TFA_ROOT)"
-	cp -R $(WORKSPACE)/tf-a/platform/override/* $(TFA_ROOT)	
+	rsync -a --update $(WORKSPACE)/tf-a/platform/override/* $(TFA_ROOT)	
+	mkdir -p $(TMPDIR)
 	$(MAKE) -C $(TFA_ROOT) -j \
 		PLAT=qemu_sbsa \
  		BUILD_BASE=$(WORKSPACE)/Build/tfa \
