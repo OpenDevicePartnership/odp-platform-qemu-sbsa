@@ -13,7 +13,6 @@ DTB_OUT := $(DTB_DIR)/qemu-ec-sp.dtb
 
 export TFA_ROOT
 export SP_LAYOUT_FILE
-export VIRTUALENV_HOME=/workspace/.venvs
 
 # ------------------------------------------------------------
 # Default target
@@ -34,7 +33,8 @@ $(DTB_OUT): $(DTS_SRC)
 tfa-hafnium: $(DTB_OUT)
 	@echo "Building TF-A in $(TFA_ROOT)"
 	rsync -a --update $(WORKSPACE)/tf-a/platform/override/* $(TFA_ROOT)	
-	$(MAKE) -C $(TFA_ROOT) -j \
+
+	cd $(TFA_ROOT) && $(MAKE) -j \
 		PLAT=qemu_sbsa \
  		BUILD_BASE=$(WORKSPACE)/Build/tfa \
 		SPD=spmd \
@@ -48,8 +48,8 @@ tfa-hafnium: $(DTB_OUT)
 		QEMU_TB_FW_CONFIG_DTS=$(WORKSPACE)/tf-a/platform/config/qemu_sbsa_tb_fw_config.dts \
 		QEMU_TOS_FW_CONFIG_DTS=$(WORKSPACE)/tf-a/platform/config/qemu_sbsa_spmc_manifest.dts \
 		SP_LAYOUT_FILE=$(PLAT_CONFIG)/sp_layout.json \
-		dtbs all fip
-
+		dtbs all fip && \
+		cd -
 
 # ------------------------------------------------------------
 # Optional: full FIP build (uncomment if needed)
