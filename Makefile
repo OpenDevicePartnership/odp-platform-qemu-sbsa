@@ -27,6 +27,13 @@ bios:
 	stuart_build -c bios/Platforms/QemuSbsaPkg/PlatformBuild.py
 
 # ------------------------------------------------------------
+# Run QEMU with the built BIOS
+# ------------------------------------------------------------
+run: bios
+	@echo "=== Running QEMU ==="
+	stuart_build -c bios/Platforms/QemuSbsaPkg/PlatformBuild.py --flashrom
+
+# ------------------------------------------------------------
 # Clean everything
 # ------------------------------------------------------------
 clean:
