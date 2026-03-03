@@ -6,16 +6,30 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-WORKSPACE ?= $(CURDIR)/..
+QEMU_RUST_BIN ?= $(CURDIR)/Build/qemu-ec-sp.bin
+QEMU_RUST_DTS ?= $(CURDIR)/Build/qemu-ec-sp.dts
+EC_SECURE_DTS ?= $(CURDIR)/odp-secure-services/platform/qemu-sp/linker/qemu-ec-sp.dts
 
-QEMU_RUST_BIN ?= $(WORKSPACE)/secure-services/odp-secure-services/target/aarch64-unknown-none/release/qemu-ec-sp
-QEMU_RUST_DTS ?= $(WORKSPACE)/secure-services/odp-secure-services/platform/qemu-sp/linker/qemu-ec-sp.dts
+all: $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
 
-secure-services: $(QEMU_RUST_BIN)
-
-$(QEMU_RUST_BIN):$(WORKSPACE)/secure-services/odp-secure-services/platform/qemu-sp/Cargo.toml
+# ------------------------------------------------------------
+# Build Secure EC Service
+# ------------------------------------------------------------
+$(QEMU_RUST_BIN): $(QEMU_RUST_DTS)
 	@echo "=== Building Secure Services ==="
-	cargo objcopy --target=aarch64-unknown-none --release --manifest-path=$(WORKSPACE)/secure-services/odp-secure-services/platform/qemu-sp/Cargo.toml -- -O binary $(QEMU_RUST_BIN)
+	mkdir -p $(dir $(QEMU_RUST_BIN))
+	cd odp-secure-services/platform/qemu-sp && \
+	cargo objcopy --target=aarch64-unknown-none --release -- -O binary $(QEMU_RUST_BIN)
 
-clean::
-	cargo clean --manifest-path=$(WORKSPACE)/secure-services/odp-secure-services/platform/qemu-sp/Cargo.toml
+# ------------------------------------------------------------
+# Copy DTS file to build directory
+# ------------------------------------------------------------
+$(QEMU_RUST_DTS): $(EC_SECURE_DTS)
+	@echo "=== Copying DTS File ==="
+	mkdir -p $(dir $(QEMU_RUST_DTS))
+	cp $(EC_SECURE_DTS) $(QEMU_RUST_DTS)
+
+clean:
+	cd odp-secure-services/platform/qemu-sp && \
+	cargo clean
+	rm -f $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)

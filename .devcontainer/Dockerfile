@@ -116,7 +116,7 @@ RUN if [ "$(arch)" = "x86_64" ]; then \
 #
 # Rust support
 #
-
+ENV HOME="/home/vscode"
 ENV CARGO_HOME="$HOME/.cargo"
 ENV RUSTUP_HOME="$HOME/.rustup"
 ENV PATH="$CARGO_HOME/bin:$PATH"
@@ -140,6 +140,10 @@ RUN mkdir cargo_downloads && \
     mv cargo-tarpaulin $CARGO_HOME/bin/ && \
     cd .. && \
     rm -r cargo_downloads
+
+RUN rustup target add aarch64-unknown-none
+RUN rustup component add llvm-tools-preview
+RUN cargo install cargo-binutils
 
 #
 # Alternatives

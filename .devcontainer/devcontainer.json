@@ -20,10 +20,7 @@
     "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=uncached"
   ],
   "containerEnv": {
-    "DISPLAY": "host.docker.internal:0",
-    "HOME": "/home/vscode",
-    "RUSTUP_HOME": "/home/vscode/.rustup",
-    "CARGO_HOME": "/home/vscode/.cargo"
+    "DISPLAY": "host.docker.internal:0"
   },
   "customizations": {
     "vscode": {
