@@ -11,6 +11,8 @@
 # Workspace setup
 # ------------------------------------------------------------
 WORKSPACE ?= $(CURDIR)
+QEMU_RUST_BIN ?= $(WORKSPACE)/secure-services/Build/qemu-ec-sp.bin
+QEMU_RUST_DTS ?= $(WORKSPACE)/secure-services/Build/qemu-ec-sp.dts
 
 # ------------------------------------------------------------
 # Default target
@@ -19,32 +21,28 @@ all: secure-services bios
 
 # ------------------------------------------------------------
 # Build Secure Services
-# Makefile must define target for secure-services
-# Makefile must export QEMU_RUST_BIN and QEMU_RUST_DTS
 # ------------------------------------------------------------
-include secure-services/Makefile
+secure-services: $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
+
+$(QEMU_RUST_BIN):
+	$(MAKE) -C secure-services $(QEMU_RUST_BIN)
+
+$(QEMU_RUST_DTS):
+	$(MAKE) -C secure-services $(QEMU_RUST_DTS)
 
 # ------------------------------------------------------------
 # Build UEFI
 # ------------------------------------------------------------
 bios: secure-services
 	@echo "=== Building BIOS ==="
-	stuart_setup -c bios/Platforms/QemuSbsaPkg/PlatformBuild.py
-	stuart_update -c bios/Platforms/QemuSbsaPkg/PlatformBuild.py
-	stuart_build -c bios/Platforms/QemuSbsaPkg/PlatformBuild.py HAF_TFA_BUILD=TRUE MSSP_RUST_BIN_FILE=$(QEMU_RUST_BIN) MSSP_RUST_DTS_FILE=$(QEMU_RUST_DTS)
-
-# ------------------------------------------------------------
-# Run QEMU with the built BIOS
-# ------------------------------------------------------------
-run:
-	@echo "=== Running QEMU ==="
-	stuart_build -c bios/Platforms/QemuSbsaPkg/PlatformBuild.py --flashrom
+	$(MAKE) -C bios patina-qemu
 
 # ------------------------------------------------------------
 # Clean everything
 # ------------------------------------------------------------
-clean::
+clean:
 	@echo "=== Cleaning all components ==="
-	rm -rf $(WORKSPACE)/bios/Build
+	$(MAKE) -C secure-services clean
+	$(MAKE) -C bios clean
 
-.PHONY : all secure-services bios run clean
+.PHONY : all secure-services bios clean
