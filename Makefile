@@ -14,6 +14,9 @@ WORKSPACE ?= $(CURDIR)
 QEMU_RUST_BIN ?= $(WORKSPACE)/secure-services/Build/qemu-ec-sp.bin
 QEMU_RUST_DTS ?= $(WORKSPACE)/secure-services/Build/qemu-ec-sp.dts
 
+export QEMU_RUST_BIN
+export QEMU_RUST_DTS
+
 # ------------------------------------------------------------
 # Default target
 # ------------------------------------------------------------
@@ -34,14 +37,12 @@ $(QEMU_RUST_DTS):
 # Build UEFI
 # ------------------------------------------------------------
 bios: secure-services
-	@echo "=== Building BIOS ==="
 	$(MAKE) -C bios patina-qemu
 
 # ------------------------------------------------------------
 # Clean everything
 # ------------------------------------------------------------
 clean:
-	@echo "=== Cleaning all components ==="
 	$(MAKE) -C secure-services clean
 	$(MAKE) -C bios clean
 
