@@ -8,7 +8,7 @@
 
 QEMU_RUST_BIN ?= $(CURDIR)/Build/qemu-ec-sp.bin
 QEMU_RUST_DTS ?= $(CURDIR)/Build/qemu-ec-sp.dts
-EC_SECURE_DTS ?= $(CURDIR)/odp-secure-services/platform/qemu-sp/linker/qemu-ec-sp.dts
+EC_SECURE_DTS ?= $(CURDIR)/platform/linker/qemu-ec-sp.dts
 
 all: $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
 
@@ -17,7 +17,7 @@ all: $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
 # ------------------------------------------------------------
 $(QEMU_RUST_BIN): $(QEMU_RUST_DTS)
 	mkdir -p $(dir $(QEMU_RUST_BIN))
-	cd odp-secure-services/platform/qemu-sp && \
+	cd platform && \
 	cargo objcopy --target=aarch64-unknown-none --release -- -O binary $(QEMU_RUST_BIN)
 
 # ------------------------------------------------------------
@@ -28,6 +28,6 @@ $(QEMU_RUST_DTS): $(EC_SECURE_DTS)
 	cp $(EC_SECURE_DTS) $(QEMU_RUST_DTS)
 
 clean:
-	cd odp-secure-services/platform/qemu-sp && \
+	cd platform && \
 	cargo clean
-	rm -f $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
+	rm -rf Build
