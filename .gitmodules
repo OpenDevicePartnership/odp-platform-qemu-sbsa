@@ -1,6 +1,3 @@
 [submodule "patina-qemu"]
 	path = bios/patina-qemu
 	url = https://github.com/OpenDevicePartnership/patina-qemu.git
-[submodule "soc-embedded-controller"]
-	path = ec/soc-embedded-controller
-	url = https://github.com/OpenDevicePartnership/soc-embedded-controller.git
