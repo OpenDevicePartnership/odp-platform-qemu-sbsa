@@ -15,9 +15,18 @@ WORKSPACE ?= $(CURDIR)
 all: patina-qemu
 
 # ------------------------------------------------------------
-# Build UEFI
+# Build UEFI without EC Support
 # ------------------------------------------------------------
 patina-qemu:
+	cd patina-qemu && \
+	stuart_setup -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
+	stuart_update -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
+	stuart_build -c Platforms/QemuSbsaPkg/PlatformBuild.py 
+
+# ------------------------------------------------------------
+# Build UEFI with EC Support
+# ------------------------------------------------------------
+patina-qemu-ec:
 	cd patina-qemu && \
 	stuart_setup -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
 	stuart_update -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
@@ -25,7 +34,7 @@ patina-qemu:
 
 run:
 	cd patina-qemu && \
-	stuart_build -c Platforms/QemuSbsaPkg/PlatformBuild.py --flashonly
+	stuart_build -c Platforms/QemuSbsaPkg/PlatformBuild.py --flashonly GDB_SERVER=5555 SERIAL_PORT=56789 
 
 clean:
 	@echo "=== Cleaning BIOS build artifacts ==="

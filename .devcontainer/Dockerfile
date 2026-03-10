@@ -216,7 +216,7 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
     && \
     git clone "${QEMU_URL}" --branch "${QEMU_BRANCH}" --depth 1 qemu && \
     cd qemu && \
-    ./configure --target-list=x86_64-softmmu,aarch64-softmmu --enable-gtk && \
+    ./configure --target-list=x86_64-softmmu,aarch64-softmmu && \
     make install -j $(nproc) && \
     cd .. && \
     rm -rf qemu && \
