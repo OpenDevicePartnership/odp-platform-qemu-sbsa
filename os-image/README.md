@@ -26,7 +26,15 @@ To mount and install the CAB files into the VHDX:
 
     `Dismount-VHD -Path "C:\Path\To\ValidationOS.vhdx`
 
-4. Copy your updated ValidationOS.vhdx file to the os-image/prebuilt folder as part of your build. `make run` will convert your VHDX to qcow2 format and run QEMU with the parameters specified in the makefile.
+## Booting QEMU SBSA to Windows
+
+After you have create a ValidatioOS.vhdx with your required files, simply copy it to the prebuild folder and run
+    `make run`
+
+This will generate the qcow2 image from the vhdx and run your BIOS in the parent folder path and boot to a command prompt. Debug output will be displayed on the terminal. Your output display will be redirected to VNC port 5901 by default. You can use and VNC Viewer to open the display `127.0.0.1:5009`. If you installed the packages above you will be able to use mouse and keyboard to interact with the terminal from the OS.
+
+If you want you can force regeneration of the winvos.qcow2 image using
+    `make qcow2`
 
 ## Connecting with Windbg
 

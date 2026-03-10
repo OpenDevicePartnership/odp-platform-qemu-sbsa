@@ -10,7 +10,9 @@ installed to allow you to open code from terminal.
 From the root folder run `code .` to start new VS code session. 
 When prompted select to re-open in a container which will setup all the required tools and packages.
 
-From VS code select `New Terminal` and run  `make all` from the root to rebuild all components.
+From VS code meun run  `Terminal -> New Terminal` and run  `make all` from the root to rebuild all components.
+
+To run QEMU with the image you generated you can run `make run` from the root folder
 
 Each sub folder has its own Makefile script to build each subcomponent.
 
@@ -23,7 +25,7 @@ odp-platform-qemu-sbsa
   |- bios/              ACPI, UEFI, TF-A, Hafnium and image creation
   |- ec/                EC MCU code
   |- secure-partition/  EC services and other secure partition code
-  |- os-image           Scripts and steps for OS image generation
+  |- os-image/          Scripts and steps for OS image generation
   |- common/            Tools, utilities and common code
   |- Makefile           Root makefile to make all components
   |- README.md          Quickstart file for each folder level

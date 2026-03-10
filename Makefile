@@ -13,6 +13,11 @@
 WORKSPACE ?= $(CURDIR)
 QEMU_RUST_BIN ?= $(WORKSPACE)/secure-services/Build/qemu-ec-sp.bin
 QEMU_RUST_DTS ?= $(WORKSPACE)/secure-services/Build/qemu-ec-sp.dts
+QEMU_RUST_OUTPUTS := $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
+
+BIOS_FLASH0 := bios/patina-qemu/Build/QemuSbsaPkg/DEBUG_GCC5/FV/SECURE_FLASH0.fd
+BIOS_EFI    := bios/patina-qemu/Build/QemuSbsaPkg/DEBUG_GCC5/FV/QEMU_EFI.fd
+BIOS_OUTPUTS := $(BIOS_FLASH0) $(BIOS_EFI)
 
 export QEMU_RUST_BIN
 export QEMU_RUST_DTS
@@ -20,30 +25,24 @@ export QEMU_RUST_DTS
 # ------------------------------------------------------------
 # Default target
 # ------------------------------------------------------------
-all: secure-services bios
+all: $(QEMU_RUST_OUTPUTS) $(BIOS_OUTPUTS)
 
 # ------------------------------------------------------------
 # Build Secure Services
 # ------------------------------------------------------------
-secure-services: $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
-
-$(QEMU_RUST_BIN):
+$(QEMU_RUST_OUTPUTS):
 	$(MAKE) -C secure-services $(QEMU_RUST_BIN)
-
-$(QEMU_RUST_DTS):
-	$(MAKE) -C secure-services $(QEMU_RUST_DTS)
 
 # ------------------------------------------------------------
 # Build UEFI with EC support by default
 # ------------------------------------------------------------
-bios: secure-services
+$(BIOS_OUTPUTS): $(QEMU_RUST_OUTPUTS)
 	$(MAKE) -C bios patina-qemu-ec
-
 
 # ------------------------------------------------------------
 # Run QEMU with the built UEFI firmware
 # ------------------------------------------------------------
-run: bios
+run: $(QEMU_RUST_OUTPUTS) $(BIOS_OUTPUTS)
 	qemu-system-aarch64 -semihosting -cpu max,sve=off,sme=off -smp 4 -machine sbsa-ref \
 		-global driver=cfi.pflash01,property=secure,value=on -m 4G \
 		-drive if=pflash,format=raw,unit=0,file=bios/patina-qemu/Build/QemuSbsaPkg/DEBUG_GCC5/FV/SECURE_FLASH0.fd \
@@ -63,5 +62,3 @@ run: bios
 clean:
 	$(MAKE) -C secure-services clean
 	$(MAKE) -C bios clean
-
-.PHONY : all secure-services bios clean

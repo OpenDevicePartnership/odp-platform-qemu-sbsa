@@ -28,6 +28,6 @@ $(QEMU_RUST_DTS): $(EC_SECURE_DTS)
 	cp $(EC_SECURE_DTS) $(QEMU_RUST_DTS)
 
 clean:
+	rm -rf Build
 	cd platform && \
 	cargo clean
-	rm -rf Build
