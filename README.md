@@ -10,7 +10,7 @@ installed to allow you to open code from terminal.
 From the root folder run `code .` to start new VS code session. 
 When prompted select to re-open in a container which will setup all the required tools and packages.
 
-From VS code meun run  `Terminal -> New Terminal` and run  `make all` from the root to rebuild all components.
+From VS code menu run  `Terminal -> New Terminal` and run  `make all` from the root to rebuild all components.
 
 To run QEMU with the image you generated you can run `make run` from the root folder
 
