@@ -1,28 +1,13 @@
 #
 #  Dockerfile for building/testing Project MU with GCC.
 #
-# NOTE: This file is automatically synchronized from Mu DevOps. Update the original file there
-#       instead of the file in this repo.
-#
-# - Mu DevOps Repo: https://github.com/microsoft/mu_devops
-# - File Sync Settings: https://github.com/microsoft/mu_devops/blob/main/.sync/Files.yml
-#
 #  Copyright (c) Microsoft Corporation
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 
-# NOTE: Because this pipeline YAML file is a Nunjucks template, the pipeline syntax of `{{}}` will conflict with
-#       Nunjucks style. Surround pipeline YAML code that uses `{{}}` within `raw` and `endraw` tags
-#       to allow it to pass through Nunjucks processing.
-
-#
-# The build container layer is intended for pipeline use and is the minimal set
-# of tools required for building Project MU.
-#
-FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04 AS build
+FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 # Versions
-ARG GCC_MAJOR_VERSION=13
 ARG NASM_VERSION=2.16.01
 ARG CSPELL_VERSION=5.20.0
 ARG MARKDOWNLINT_VERSION=0.32.2
@@ -62,7 +47,6 @@ RUN apt-get update && \
     m4 \
     make \
     mono-complete \
-    nasm \
     npm \
     sudo \
     unzip \
@@ -70,26 +54,20 @@ RUN apt-get update && \
     wget \
     python3 \
     python3-venv \
-    g++-${GCC_MAJOR_VERSION} gcc-${GCC_MAJOR_VERSION} \
-    gcc-${GCC_MAJOR_VERSION}-x86-64-linux-gnux32 \
-    gcc-${GCC_MAJOR_VERSION}-aarch64-linux-gnu \
-    gcc-${GCC_MAJOR_VERSION}-riscv64-linux-gnu \
-    gcc-${GCC_MAJOR_VERSION}-arm-linux-gnueabi \
-    gcc-${GCC_MAJOR_VERSION}-arm-linux-gnueabihf \
+    python-is-python3 \
+    g++ \
+    gcc \
+    gcc-aarch64-linux-gnu \
     && \
-    python3 -m venv /opt/venv && \
-    chmod -R g+w,o+w /opt/venv && \
-    /opt/venv/bin/pip install --upgrade pip setuptools && \
-    apt-get upgrade -y && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/opt/venv/bin:$PATH"
-ENV GCC5_AARCH64_PREFIX /usr/bin/aarch64-linux-gnu-
-ENV GCC5_ARM_PREFIX     /usr/bin/arm-linux-gnueabi-
-ENV GCC5_RISCV64_PREFIX /usr/bin/riscv64-linux-gnu-
+ENV GCC5_AARCH64_PREFIX=/usr/bin/aarch64-linux-gnu-
+ENV IN_DEVCONTAINER=1
 
-RUN pip install pip lcov_cobertura --upgrade
+RUN python3 -m venv /opt/venv && \
+    chmod -R g+w,o+w /opt/venv && \
+    /opt/venv/bin/pip install --upgrade pip
+ENV PATH="/opt/venv/bin:$PATH"
 
 # RUN npm install -g npm
 RUN npm install -g \
@@ -117,121 +95,30 @@ RUN if [ "$(arch)" = "x86_64" ]; then \
 # Rust support
 #
 ENV HOME="/home/vscode"
-ENV CARGO_HOME="$HOME/.cargo"
-ENV RUSTUP_HOME="$HOME/.rustup"
-ENV PATH="$CARGO_HOME/bin:$PATH"
+ENV PATH="$HOME/.cargo/bin:$PATH"
 
 # Install Rust/Cargo and extras (rust-src, rust fmt, cargo-make, cargo-tarpaulin)
+USER vscode
 RUN RUST_VERSION=1.92.0 && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION} --profile minimal && \
-    rustup component add rustfmt rust-src --toolchain ${RUST_VERSION}-x86_64-unknown-linux-gnu
+    rustup component add rustfmt rust-src && \
+    rustup target add aarch64-unknown-none && \
+    rustup component add llvm-tools-preview && \
+    cargo install cargo-binstall && \
+    cargo binstall -y cargo-binutils && \
+    cargo binstall -y cargo-make@0.37.24 && \
+    cargo binstall -y cargo-tarpaulin@0.31.5
+USER root
 
-RUN mkdir cargo_downloads && \
-    cd cargo_downloads && \
-    TAG_NAME=0.37.24 && \
-    DOWNLOAD_URL="https://github.com/sagiegurari/cargo-make/releases/download/$TAG_NAME/cargo-make-v$TAG_NAME-x86_64-unknown-linux-gnu.zip" && \
-    curl -L -o cargo-make.zip "$DOWNLOAD_URL" && \
-    unzip cargo-make.zip && \
-    mv cargo-make-v$TAG_NAME-x86_64-unknown-linux-gnu/cargo-make $CARGO_HOME/bin/ && \
-    TAG_NAME=0.31.5 && \
-    DOWNLOAD_URL="https://github.com/xd009642/tarpaulin/releases/download/$TAG_NAME/cargo-tarpaulin-x86_64-unknown-linux-gnu.tar.gz" && \
-    curl -L -o cargo-tarpaulin.tar.gz "$DOWNLOAD_URL" && \
-    tar -xzvf cargo-tarpaulin.tar.gz && \
-    mv cargo-tarpaulin $CARGO_HOME/bin/ && \
-    cd .. && \
-    rm -r cargo_downloads
+# Install stuart tools for building UEFI
+USER vscode
+COPY bios/patina-qemu/pip-requirements.txt /tmp/pip-requirements.txt
+RUN pip install --upgrade -r /tmp/pip-requirements.txt && pip install pip lcov_cobertura --upgrade
+USER root
 
-RUN rustup target add aarch64-unknown-none
-RUN rustup component add llvm-tools-preview
-RUN cargo install cargo-binutils
+COPY --from=ghcr.io/dymk/qemu-builder@sha256:f82a910a1a747ede233f393af234ea678b539b3273077bbc370db604183f7a8e  /usr/local/bin/qemu-system-aarch64 /usr/local/bin/qemu-system-aarch64
+COPY --from=ghcr.io/dymk/qemu-builder@sha256:f82a910a1a747ede233f393af234ea678b539b3273077bbc370db604183f7a8e  /usr/local/share/qemu/ /usr/local/share/qemu/
 
-#
-# Alternatives
-#
-
-
-RUN update-alternatives \
-    --install /usr/bin/python python /usr/bin/python3.12 1 && \
-    update-alternatives \
-    --install /usr/bin/python3 python3 /usr/bin/python3.12 1 && \
-    update-alternatives \
-    --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_MAJOR_VERSION} 100 \
-    --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_MAJOR_VERSION} && \
-    update-alternatives --remove-all cpp && \
-    update-alternatives \
-    --install /usr/bin/cpp cpp /usr/bin/cpp-${GCC_MAJOR_VERSION} 100 && \
-    update-alternatives \
-    --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-${GCC_MAJOR_VERSION} 100 \
-    --slave /usr/bin/aarch64-linux-gnu-cpp aarch64-linux-gnu-cpp /usr/bin/aarch64-linux-gnu-cpp-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/aarch64-linux-gnu-gcc-ar aarch64-linux-gnu-gcc-ar /usr/bin/aarch64-linux-gnu-gcc-ar-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/aarch64-linux-gnu-gcc-nm aarch64-linux-gnu-gcc-nm /usr/bin/aarch64-linux-gnu-gcc-nm-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/aarch64-linux-gnu-gcc-ranlib aarch64-linux-gnu-gcc-ranlib /usr/bin/aarch64-linux-gnu-gcc-ranlib-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/aarch64-linux-gnu-gcov aarch64-linux-gnu-gcov /usr/bin/aarch64-linux-gnu-gcov-${GCC_MAJOR_VERSION} && \
-    update-alternatives \
-    --install /usr/bin/arm-linux-gnueabi-gcc arm-linux-gnueabi-gcc /usr/bin/arm-linux-gnueabi-gcc-${GCC_MAJOR_VERSION} 100 \
-    --slave /usr/bin/arm-linux-gnueabi-cpp arm-linux-gnueabi-cpp /usr/bin/arm-linux-gnueabi-cpp-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/arm-linux-gnueabi-g++ arm-linux-gnueabi-g++ /usr/bin/arm-linux-gnueabi-g++-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/arm-linux-gnueabi-gcc-ar arm-linux-gnueabi-gcc-ar /usr/bin/arm-linux-gnueabi-gcc-ar-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/arm-linux-gnueabi-gcc-nm arm-linux-gnueabi-gcc-nm /usr/bin/arm-linux-gnueabi-gcc-nm-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/arm-linux-gnueabi-gcc-ranlib arm-linux-gnueabi-gcc-ranlib /usr/bin/arm-linux-gnueabi-gcc-ranlib-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/arm-linux-gnueabi-gcov arm-linux-gnueabi-gcov /usr/bin/arm-linux-gnueabi-gcov-${GCC_MAJOR_VERSION} && \
-    update-alternatives \
-    --install /usr/bin/riscv64-linux-gnu-gcc riscv64-linux-gnu-gcc /usr/bin/riscv64-linux-gnu-gcc-${GCC_MAJOR_VERSION} 100 \
-    --slave /usr/bin/riscv64-linux-gnu-cpp riscv64-linux-gnu-cpp /usr/bin/riscv64-linux-gnu-cpp-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/riscv64-linux-gnu-g++ riscv64-linux-gnu-g++ /usr/bin/riscv64-linux-gnu-g++-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/riscv64-linux-gnu-gcc-ar riscv64-linux-gnu-gcc-ar /usr/bin/riscv64-linux-gnu-gcc-ar-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/riscv64-linux-gnu-gcc-nm riscv64-linux-gnu-gcc-nm /usr/bin/riscv64-linux-gnu-gcc-nm-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/riscv64-linux-gnu-gcc-ranlib riscv64-linux-gnu-gcc-ranlib /usr/bin/riscv64-linux-gnu-gcc-ranlib-${GCC_MAJOR_VERSION} \
-    --slave /usr/bin/riscv64-linux-gnu-gcov riscv64-linux-gnu-gcov /usr/bin/riscv64-linux-gnu-gcov-${GCC_MAJOR_VERSION}
-
-#
-# The test container layer is intended for pipeline use and virtual platform tools
-# on top of the base build image.
-#
-FROM build AS test
-
-ARG QEMU_URL="https://gitlab.com/qemu-project/qemu.git"
-ARG QEMU_BRANCH="v10.0.0"
-
-RUN apt-get update && apt-get install --yes --no-install-recommends \
-    autoconf \
-    automake \
-    autotools-dev \
-    bc \
-    build-essential \
-    dosfstools \
-    gcc \
-    libglib2.0-dev \
-    libgtk-3-dev \
-    libpixman-1-dev \
-    libsdl2-dev \
-    mtools \
-    ninja-build \
-    tar \
-    && \
-    git clone "${QEMU_URL}" --branch "${QEMU_BRANCH}" --depth 1 qemu && \
-    cd qemu && \
-    ./configure --target-list=x86_64-softmmu,aarch64-softmmu && \
-    make install -j $(nproc) && \
-    cd .. && \
-    rm -rf qemu && \
-    apt remove --yes ninja-build && \
-    apt-get clean
-
-#
-# The dev container layer is intended for local use and has more robust tooling
-# and environment configurations for developers.
-#
-FROM test AS dev
-
-RUN apt-get update && \
-    apt-get install --yes --no-install-recommends \
-    nano \
-    less \
-    && \
-    apt-get clean
+USER vscode
+RUN git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install --all
+USER root

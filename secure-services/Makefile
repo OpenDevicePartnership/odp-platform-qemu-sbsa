@@ -6,28 +6,37 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-QEMU_RUST_BIN ?= $(CURDIR)/Build/qemu-ec-sp.bin
-QEMU_RUST_DTS ?= $(CURDIR)/Build/qemu-ec-sp.dts
-EC_SECURE_DTS ?= $(CURDIR)/platform/linker/qemu-ec-sp.dts
+QEMU_RUST_BIN := Build/qemu-ec-sp.bin
+QEMU_RUST_DTS := Build/qemu-ec-sp.dts
+EC_SECURE_DTS := platform/linker/qemu-ec-sp.dts
+
+include ../Common.mk
 
 all: $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
 
 # ------------------------------------------------------------
 # Build Secure EC Service
 # ------------------------------------------------------------
-$(QEMU_RUST_BIN): $(QEMU_RUST_DTS)
-	mkdir -p $(dir $(QEMU_RUST_BIN))
-	cd platform && \
-	cargo objcopy --target=aarch64-unknown-none --release -- -O binary $(QEMU_RUST_BIN)
+$(QEMU_RUST_BIN): $(QEMU_RUST_DTS) builder-image
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/secure-services && \
+		mkdir -p Build && \
+		cd platform && \
+		cargo objcopy --target=aarch64-unknown-none --release -- -O binary ../$(QEMU_RUST_BIN) \
+	"
 
 # ------------------------------------------------------------
 # Copy DTS file to build directory
 # ------------------------------------------------------------
 $(QEMU_RUST_DTS): $(EC_SECURE_DTS)
-	mkdir -p $(dir $(QEMU_RUST_DTS))
+	mkdir -p Build
 	cp $(EC_SECURE_DTS) $(QEMU_RUST_DTS)
 
-clean:
+clean: builder-image
 	rm -rf Build
-	cd platform && \
-	cargo clean
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/secure-services/platform && \
+		cargo clean \
+	"
+
+.PHONY: all clean

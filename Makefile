@@ -6,43 +6,32 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
-# ------------------------------------------------------------
-# Workspace setup
-# ------------------------------------------------------------
-WORKSPACE ?= $(CURDIR)
-QEMU_RUST_BIN ?= $(WORKSPACE)/secure-services/Build/qemu-ec-sp.bin
-QEMU_RUST_DTS ?= $(WORKSPACE)/secure-services/Build/qemu-ec-sp.dts
-QEMU_RUST_OUTPUTS := $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
-
-BIOS_FLASH0 := bios/patina-qemu/Build/QemuSbsaPkg/DEBUG_GCC5/FV/SECURE_FLASH0.fd
-BIOS_EFI    := bios/patina-qemu/Build/QemuSbsaPkg/DEBUG_GCC5/FV/QEMU_EFI.fd
-BIOS_OUTPUTS := $(BIOS_FLASH0) $(BIOS_EFI)
-
-export QEMU_RUST_BIN
-export QEMU_RUST_DTS
+include Common.mk
 
 # ------------------------------------------------------------
 # Default target
 # ------------------------------------------------------------
-all: $(QEMU_RUST_OUTPUTS) $(BIOS_OUTPUTS)
+all: secure-services bios
+
+# Ensure bios builds after secure-services (bios consumes secure-services artifacts)
+bios: secure-services
 
 # ------------------------------------------------------------
 # Build Secure Services
 # ------------------------------------------------------------
-$(QEMU_RUST_OUTPUTS):
-	$(MAKE) -C secure-services $(QEMU_RUST_BIN)
+secure-services:
+	$(MAKE) -C secure-services all
 
 # ------------------------------------------------------------
 # Build UEFI with EC support by default
 # ------------------------------------------------------------
-$(BIOS_OUTPUTS): $(QEMU_RUST_OUTPUTS)
+bios:
 	$(MAKE) -C bios patina-qemu-ec
 
 # ------------------------------------------------------------
 # Run QEMU with the built UEFI firmware
 # ------------------------------------------------------------
-run: $(QEMU_RUST_OUTPUTS) $(BIOS_OUTPUTS)
+run:
 	qemu-system-aarch64 -semihosting -cpu max,sve=off,sme=off -smp 4 -machine sbsa-ref \
 		-global driver=cfi.pflash01,property=secure,value=on -m 4G \
 		-drive if=pflash,format=raw,unit=0,file=bios/patina-qemu/Build/QemuSbsaPkg/DEBUG_GCC5/FV/SECURE_FLASH0.fd \
@@ -53,8 +42,11 @@ run: $(QEMU_RUST_OUTPUTS) $(BIOS_OUTPUTS)
 		-smbios type=3,manufacturer="OpenDevicePartnership",serial="42-42-42-42",asset="SBSA",sku="SBSA",version="" \
 		-device qemu-xhci,id=usb -device usb-mouse,id=input0,bus=usb.0,port=1 \
 		-device usb-kbd,id=input1,bus=usb.0,port=2 \
-		-serial stdio \
+		-serial mon:stdio \
 		-display vnc=:1
+
+run-in-devcontainer:
+	$(DOCKER_COMMAND_PREFIX) bash -lc "make run"
 
 # ------------------------------------------------------------
 # Clean everything
@@ -62,3 +54,5 @@ run: $(QEMU_RUST_OUTPUTS) $(BIOS_OUTPUTS)
 clean:
 	$(MAKE) -C secure-services clean
 	$(MAKE) -C bios clean
+
+.PHONY: all secure-services bios run run-in-devcontainer clean
