@@ -5,7 +5,8 @@
     "cacheFrom": [
       "ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest",
       "ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:cache",
-      "ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest"
+      "ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest",
+      "ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache"
     ]
   },
   "forwardPorts": [

@@ -30,12 +30,13 @@ ifeq ($(IN_DEVCONTAINER),1)
 	@echo "=== Skipping Docker image build (running inside devcontainer) ==="
 else
 	@echo "=== Building Docker Image ==="
-	docker build \
-		--cache-from ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:cache \
+	docker buildx build \
+		--cache-from type=registry,ref=ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:cache \
 		--cache-from ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest \
-		--cache-from ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache \
+		--cache-from type=registry,ref=ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache \
 		--cache-from ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest \
 		-t $(BUILDER_IMAGE) \
 		-f $(REPO_ROOT_IN_HOST)/.devcontainer/Dockerfile \
+		--load \
 		$(REPO_ROOT_IN_HOST)
 endif

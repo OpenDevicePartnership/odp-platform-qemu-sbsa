@@ -60,7 +60,16 @@ devcontainer build \
     --log-level debug 2>&1 | tee /tmp/devcontainer-build.log
 
 # Extract the Dockerfile-with-features path from the debug log.
-DOCKERFILE_WITH_FEATURES=$(grep -aoP '(?<=-f )\S+Dockerfile-with-features' /tmp/devcontainer-build.log | head -1)
+DOCKERFILE_WITH_FEATURES=$(
+    awk '{
+        for (i = 1; i < NF; i++) {
+            if ($i == "-f" && $(i+1) ~ /Dockerfile-with-features$/) {
+                print $(i+1);
+                exit;
+            }
+        }
+    }' /tmp/devcontainer-build.log
+)
 if [[ -z "$DOCKERFILE_WITH_FEATURES" || ! -f "$DOCKERFILE_WITH_FEATURES" ]]; then
     echo "ERROR: Could not find generated Dockerfile-with-features." >&2
     echo "Check /tmp/devcontainer-build.log for details." >&2

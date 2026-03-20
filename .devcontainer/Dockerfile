@@ -121,4 +121,3 @@ COPY --from=ghcr.io/dymk/qemu-builder@sha256:f82a910a1a747ede233f393af234ea678b5
 
 USER vscode
 RUN git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install --all
-USER root

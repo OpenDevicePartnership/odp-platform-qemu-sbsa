@@ -45,7 +45,7 @@ run:
 		-serial mon:stdio \
 		-display vnc=:1
 
-run-in-devcontainer:
+run-in-devcontainer: all
 	$(DOCKER_COMMAND_PREFIX) bash -lc "make run"
 
 # ------------------------------------------------------------
