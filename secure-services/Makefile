@@ -32,11 +32,15 @@ $(QEMU_RUST_DTS): $(EC_SECURE_DTS)
 	mkdir -p Build
 	cp $(EC_SECURE_DTS) $(QEMU_RUST_DTS)
 
-clean: builder-image
+clean:
 	rm -rf Build
+ifeq ($(IN_DEVCONTAINER),1)
+	cd platform && cargo clean
+else
 	$(DOCKER_COMMAND_PREFIX) bash -lc " \
 		cd $(REPO_ROOT)/secure-services/platform && \
 		cargo clean \
 	"
+endif
 
 .PHONY: all clean

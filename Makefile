@@ -31,7 +31,7 @@ bios:
 # ------------------------------------------------------------
 # Run QEMU with the built UEFI firmware
 # ------------------------------------------------------------
-run:
+run: all
 	qemu-system-aarch64 -semihosting -cpu max,sve=off,sme=off -smp 4 -machine sbsa-ref \
 		-global driver=cfi.pflash01,property=secure,value=on -m 4G \
 		-drive if=pflash,format=raw,unit=0,file=bios/patina-qemu/Build/QemuSbsaPkg/DEBUG_GCC5/FV/SECURE_FLASH0.fd \

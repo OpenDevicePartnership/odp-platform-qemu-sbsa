@@ -104,7 +104,7 @@ RUN RUST_VERSION=1.92.0 && \
     rustup component add rustfmt rust-src && \
     rustup target add aarch64-unknown-none && \
     rustup component add llvm-tools-preview && \
-    cargo install cargo-binstall && \
+    cargo install cargo-binstall@1.17.7 --locked && \
     cargo binstall -y cargo-binutils && \
     cargo binstall -y cargo-make@0.37.24 && \
     cargo binstall -y cargo-tarpaulin@0.31.5
@@ -113,11 +113,10 @@ USER root
 # Install stuart tools for building UEFI
 USER vscode
 COPY bios/patina-qemu/pip-requirements.txt /tmp/pip-requirements.txt
-RUN pip install --upgrade -r /tmp/pip-requirements.txt && pip install pip lcov_cobertura --upgrade
+RUN pip install --upgrade -r /tmp/pip-requirements.txt pip lcov_cobertura
 USER root
 
 COPY --from=ghcr.io/dymk/qemu-builder@sha256:f82a910a1a747ede233f393af234ea678b539b3273077bbc370db604183f7a8e  /usr/local/bin/qemu-system-aarch64 /usr/local/bin/qemu-system-aarch64
 COPY --from=ghcr.io/dymk/qemu-builder@sha256:f82a910a1a747ede233f393af234ea678b539b3273077bbc370db604183f7a8e  /usr/local/share/qemu/ /usr/local/share/qemu/
 
 USER vscode
-RUN git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install --all

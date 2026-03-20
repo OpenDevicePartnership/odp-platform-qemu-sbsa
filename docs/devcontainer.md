@@ -47,10 +47,10 @@ override this by passing an image name:
 
 Both CI and `Common.mk` try multiple cache sources in order:
 
-1. `ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache`
-2. `ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest`
-3. `ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:cache`
-4. `ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest`
+1. `ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:cache`
+2. `ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest`
+3. `ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache`
+4. `ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest`
 
 This means PRs from forks can benefit from the upstream org cache, and
 contributors can push their own cache to speed up their PRs.
