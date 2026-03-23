@@ -1,6 +1,5 @@
-
-# This workflow automatically publishes the HAF and TFA binaries for a given
-# release.
+# This workflow builds the devcontainer image and QEMU BIOS as part of pull
+# request validation.
 #
 # Copyright (c) Microsoft Corporation.
 # SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -11,23 +10,88 @@ name: Build components
 on:
   pull_request:
     branches: [ main ]
+  push:
+    branches: [ main ]
 
 jobs:
-  build:
-    name: BIOS Build
+  devcontainer:
+    name: Build Multiplatform Devcontainer
     runs-on: ubuntu-24.04
-
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Checkout patina-qemu submodule
+        run: |
+          git submodule update --init bios/patina-qemu
+
+      - name: Set up QEMU for multi-architecture builds
+        uses: docker/setup-qemu-action@v3
+
+      - name: Setup Docker buildx for multi-architecture builds
+        uses: docker/setup-buildx-action@v3
+        with:
+          use: true
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build devcontainer image
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer
+          cacheFrom: |
+            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:cache
+            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest
+          platform: linux/amd64,linux/arm64
+          # For now, never push, until ODP org is set up so CI can push to the
+          # correct registry. Once that's done, we can change this to `always`
+          # and remove the `cacheFrom` entries for the dymk images.
+          push: never
+
+  build-bios:
+    name: Build QEMU Bios
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Cache git folder
+        uses: actions/cache@v4
+        with:
+          path: .git
+          key: git-folder-build-bios-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            git-folder-build-bios-${{ github.ref }}-
+            git-folder-build-bios-
+
       - name: Checkout Code
         uses: actions/checkout@v6
         with:
           submodules: recursive
-          
-      - name: Run make in devcontainer
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build devcontainer image
         uses: devcontainers/ci@v0.3
         with:
+          imageName: ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer
+          cacheFrom: |
+            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest
+            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:cache
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache
           push: never
+          env: |
+            GIT_COMMITTER_NAME=vscode
+            GIT_COMMITTER_EMAIL=vscode@example.com
           runCmd: |
-            git config --global user.name "github-actions"
-            git config --global user.email "github-actions@donotreply.com"
-            make
+            make all

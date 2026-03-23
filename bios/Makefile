@@ -7,38 +7,46 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-# ------------------------------------------------------------
-# Workspace setup
-# ------------------------------------------------------------
-WORKSPACE ?= $(CURDIR)
+include ../Common.mk
 
-all: patina-qemu
+all: patina-qemu-ec
 
 # ------------------------------------------------------------
 # Build UEFI without EC Support
 # ------------------------------------------------------------
-patina-qemu:
-	cd patina-qemu && \
-	stuart_setup -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
-	stuart_update -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
-	stuart_build -c Platforms/QemuSbsaPkg/PlatformBuild.py 
+patina-qemu: builder-image
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/bios/patina-qemu && \
+		stuart_setup -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
+		stuart_update -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
+		stuart_build -c Platforms/QemuSbsaPkg/PlatformBuild.py \
+	"
 
 # ------------------------------------------------------------
 # Build UEFI with EC Support
 # ------------------------------------------------------------
-patina-qemu-ec:
-	cd patina-qemu && \
-	stuart_setup -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
-	stuart_update -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
-	stuart_build -c Platforms/QemuSbsaPkg/PlatformBuild.py HAF_TFA_BUILD=TRUE MSSP_RUST_BIN_FILE=$(QEMU_RUST_BIN) MSSP_RUST_DTS_FILE=$(QEMU_RUST_DTS)
+patina-qemu-ec: builder-image
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/bios/patina-qemu && \
+		stuart_setup -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
+		stuart_update -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
+		stuart_build -c Platforms/QemuSbsaPkg/PlatformBuild.py \
+			HAF_TFA_BUILD=TRUE \
+			MSSP_RUST_BIN_FILE=$(REPO_ROOT)/secure-services/Build/qemu-ec-sp.bin \
+			MSSP_RUST_DTS_FILE=$(REPO_ROOT)/secure-services/Build/qemu-ec-sp.dts \
+	"
 
-run:
-	cd patina-qemu && \
-	stuart_build -c Platforms/QemuSbsaPkg/PlatformBuild.py --flashonly GDB_SERVER=5555 SERIAL_PORT=56789 
+builder-shell: builder-image
+	$(DOCKER_COMMAND_PREFIX) bash
+
+run: builder-image
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/bios/patina-qemu && \
+		stuart_build -c Platforms/QemuSbsaPkg/PlatformBuild.py --flashonly GDB_SERVER=5555 SERIAL_PORT=56789 \
+	"
 
 clean:
 	@echo "=== Cleaning BIOS build artifacts ==="
-	cd patina-qemu && \
-	rm -rf Build
+	cd $(REPO_ROOT_IN_HOST)/bios/patina-qemu && rm -rf Build
 
-.PHONY : all patina-qemu run clean
+.PHONY : all builder-image builder-shell patina-qemu patina-qemu-ec run clean

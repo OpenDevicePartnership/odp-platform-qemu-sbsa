@@ -1,9 +1,14 @@
 {
   "build": {
     "dockerfile": "Dockerfile",
-    "context": "."
+    "context": "..",
+    "cacheFrom": [
+      "ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest",
+      "ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:cache",
+      "ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest",
+      "ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache"
+    ]
   },
-  "postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/post_create.sh",
   "forwardPorts": [
     5005, // For general use. EXDI, TCP Serial, etc.
     5006,
@@ -11,17 +16,7 @@
     5008,
     5900 // VNC
   ],
-  "mounts": [
-    {
-      "type": "volume",
-      "source": "patina-qemu-pip-cache",
-      "target": "/home/vscode/.cache/pip"
-    },
-    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=uncached"
-  ],
-  "containerEnv": {
-    "DISPLAY": "host.docker.internal:0"
-  },
+  "mounts": [],
   "customizations": {
     "vscode": {
       "extensions": [
