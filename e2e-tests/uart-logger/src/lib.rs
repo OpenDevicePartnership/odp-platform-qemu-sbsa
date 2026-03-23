@@ -42,7 +42,8 @@ static LOGGER: UartLogger = UartLogger;
 /// Install the UART logger as the global `log` backend.
 ///
 /// Sets the max log level to `Trace` so all messages are emitted.
+/// Panics if the logger has already been set.
 pub fn init() {
-    log::set_logger(&LOGGER).ok();
+    log::set_logger(&LOGGER).expect("UART logger already set");
     log::set_max_level(LevelFilter::Trace);
 }

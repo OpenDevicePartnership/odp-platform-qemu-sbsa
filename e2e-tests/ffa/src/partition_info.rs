@@ -11,6 +11,7 @@ use uuid::Uuid;
 
 const FFA_PARTITION_INFO_GET_REGS: u64 = 0xC400008B;
 const FFA_SUCCESS_64: u64 = 0xC4000061;
+const FFA_ERROR: u64 = 0x84000060;
 
 /// Information about a discovered partition.
 #[derive(Debug, Clone, Copy)]
@@ -43,23 +44,31 @@ pub fn ffa_partition_info_get_regs(uuid: &Uuid) -> Result<(usize, [PartitionInfo
     log::debug!("PART_INFO_GET_REGS output: x0={:#018x} x2={:#018x} x3={:#018x}",
         result[0], result[2], result[3]);
 
+    if result[0] == FFA_ERROR {
+        let error_code = odp_ffa::ErrorCode::try_from(result[2] as i64)
+            .map_err(|e| odp_ffa::Error::InvalidErrorCode(e.number))?;
+        return Err(odp_ffa::Error::ErrorCode(error_code));
+    }
     if result[0] != FFA_SUCCESS_64 {
-        // Try to parse as FFA error
         let fid = odp_ffa::FunctionId::try_from(result[0])
             .map_err(|e| odp_ffa::Error::InvalidFunctionId(e.number))?;
         return Err(odp_ffa::Error::UnexpectedFunctionId(fid));
     }
 
     // x2 contains metadata:
-    //   [63:48] = descriptor size
+    //   [63:48] = descriptor size (in bytes)
     //   [47:32] = current index
     //   [31:16] = last index (total_entries - 1)
     //   [15:0]  = start index
     let meta = result[2];
+    let desc_size = ((meta >> 48) & 0xFFFF) as usize;
+    let start_idx = (meta & 0xFFFF) as usize;
     let last_idx = ((meta >> 16) & 0xFFFF) as usize;
-    let count = (last_idx + 1).min(4);
+    let count = (last_idx - start_idx + 1).min(4);
+    // Each descriptor occupies ceil(desc_size / 8) registers, minimum 3.
+    let regs_per_desc = if desc_size > 0 { (desc_size + 7) / 8 } else { 3 };
 
-    // Partition descriptors are packed 3 registers per entry starting at x3 (result[3]).
+    // Partition descriptors are packed starting at x3 (result[3]).
     // Each descriptor: reg+0 = (properties[63:32] | exec_ctx[31:16] | part_id[15:0])
     //                  reg+1 = UUID low, reg+2 = UUID high
     let regs = &result[3..];
@@ -71,7 +80,7 @@ pub fn ffa_partition_info_get_regs(uuid: &Uuid) -> Result<(usize, [PartitionInfo
     }; 4];
 
     for i in 0..count {
-        let base = i * 3;
+        let base = i * regs_per_desc;
         if base >= regs.len() {
             break;
         }

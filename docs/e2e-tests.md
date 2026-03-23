@@ -48,7 +48,12 @@ e2e-tests/
 │   ├── Cargo.toml
 │   └── src/
 │       ├── lib.rs           # Re-exports odp_ffa::*
-│       └── partition_info.rs# FFA_PARTITION_INFO_GET_REGS (TODO: upstream to odp-ffa)
+│       ├── partition_info.rs# FFA_PARTITION_INFO_GET_REGS (TODO: upstream to odp-ffa)
+│       └── smc.rs           # FF-A raw SMC wrapper
+├── uart-logger/             # Minimal UART logging crate for PL011
+│   ├── Cargo.toml
+│   └── src/
+│       └── lib.rs
 └── tests/
     └── thermal/             # Thermal service test suite
         ├── Cargo.toml
@@ -125,8 +130,8 @@ The register layout for an `FFA_MSG_SEND_DIRECT_REQ2` SMC is:
 |----------|----------|
 | x0 | Function ID (`0xC400008D`) |
 | x1 | `(source_id << 16) \| destination_id` |
-| x2 | Service UUID low 64 bits (big-endian u64) |
-| x3 | Service UUID high 64 bits (big-endian u64) |
+| x2 | Service UUID high 64 bits (big-endian u64) |
+| x3 | Service UUID low 64 bits (big-endian u64) |
 | x4–x17 | Payload arguments (Arg0–Arg13) |
 
 The payload is serialized as a `DirectMessagePayload` — a 112-byte (14 × 8)
@@ -150,9 +155,6 @@ For the Thermal `get_temperature` command specifically:
 # Build test EFI binaries only
 make -C e2e-tests build
 
-# Run interactively (serial on stdio, Ctrl-A X to quit)
-make -C e2e-tests run
-
 # Run with timeout + pass/fail reporting (for CI)
 make -C e2e-tests test
 
@@ -162,7 +164,7 @@ make e2e-test
 
 ### Adjusting the Timeout
 
-The default QEMU timeout is 120 seconds. Override with:
+The default QEMU timeout is 180 seconds. Override with:
 
 ```bash
 make -C e2e-tests test QEMU_TIMEOUT=60

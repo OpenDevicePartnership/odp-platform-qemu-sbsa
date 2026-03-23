@@ -37,7 +37,7 @@ pub fn raw_smc(
             inout("x15") x15 => result[15],
             inout("x16") x16 => result[16],
             inout("x17") x17 => result[17],
-            options(nomem, nostack),
+            options(nostack),
         );
     }
     result
