@@ -91,6 +91,7 @@ jobs:
             ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache
           push: never
           env: |
+            CI=true
             GIT_COMMITTER_NAME=vscode
             GIT_COMMITTER_EMAIL=vscode@example.com
           runCmd: |
