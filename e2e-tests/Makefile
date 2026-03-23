@@ -45,10 +45,10 @@ build: builder-image
 # ------------------------------------------------------------
 # Prepare the virtual FAT drive with test binaries + startup.nsh
 # ------------------------------------------------------------
-$(VDRIVE_DIR): build
+$(VDRIVE_DIR): build $(TEST_EFIS) startup.nsh
 	rm -rf $(VDRIVE_DIR)
 	mkdir -p $(VDRIVE_DIR)
-	cp $(THERMAL_EFI) $(VDRIVE_DIR)/thermal.efi
+	cp $(TEST_EFIS) $(VDRIVE_DIR)/
 	cp startup.nsh $(VDRIVE_DIR)/startup.nsh
 
 # ------------------------------------------------------------
@@ -83,20 +83,28 @@ test: $(VDRIVE_DIR)
 	echo ""; \
 	if ! grep -q "EC Secure Partition E2E Tests" Build/test-output.log; then \
 		echo "RESULT: TESTS NEVER RAN (banner not found in output)"; \
-		exit 1; \
+		TEST_FAILED=1; \
 	elif grep -q "\[FAIL\]" Build/test-output.log; then \
 		echo "RESULT: SOME TESTS FAILED"; \
-		exit 1; \
+		TEST_FAILED=1; \
 	elif grep -q "\[PASS\]" Build/test-output.log; then \
 		echo "RESULT: ALL TESTS PASSED"; \
-		exit 0; \
+		TEST_FAILED=0; \
 	elif [ "$$EXIT_CODE" = "124" ]; then \
 		echo "RESULT: TIMED OUT (no test output seen)"; \
-		exit 1; \
+		TEST_FAILED=1; \
 	else \
 		echo "RESULT: NO TEST OUTPUT FOUND (exit code $$EXIT_CODE)"; \
-		exit 1; \
-	fi
+		TEST_FAILED=1; \
+	fi; \
+	if [ "$$TEST_FAILED" = "1" ] && [ "$(VERBOSE_ON_FAIL)" = "1" ]; then \
+		echo ""; \
+		echo "=== Full QEMU serial output ==="; \
+		cat Build/test-output.log 2>/dev/null || echo "(no log file)"; \
+		echo ""; \
+		echo "=== End of QEMU serial output ==="; \
+	fi; \
+	exit $$TEST_FAILED
 
 # ------------------------------------------------------------
 # Clean build artifacts
