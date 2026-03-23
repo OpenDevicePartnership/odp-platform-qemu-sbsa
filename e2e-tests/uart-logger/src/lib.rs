@@ -13,13 +13,20 @@ use log::{LevelFilter, Log, Metadata, Record};
 
 /// PL011 UART0 data register on QEMU sbsa-ref.
 const UART0_DR: *mut u8 = 0x6000_0000 as *mut u8;
+/// PL011 UART0 flag register (FR) on QEMU sbsa-ref.
+const UART0_FR: *const u32 = 0x6000_0018 as *const u32;
+/// Transmit FIFO full flag in the PL011 FR register.
+const UART_FR_TXFF: u32 = 1 << 5;
 
 struct UartLogger;
 
 impl Write for UartLogger {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         for b in s.bytes() {
-            unsafe { core::ptr::write_volatile(UART0_DR, b) };
+            unsafe {
+                while core::ptr::read_volatile(UART0_FR) & UART_FR_TXFF != 0 {}
+                core::ptr::write_volatile(UART0_DR, b);
+            }
         }
         Ok(())
     }

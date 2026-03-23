@@ -77,8 +77,8 @@ test: $(VDRIVE_DIR)
 	@mkdir -p Build
 	@echo "=== Running E2E tests (timeout=$(QEMU_TIMEOUT)s) ==="
 	$(call GROUP,QEMU serial output)
-	@trap '$(DOCKER_COMMAND_PREFIX) pkill -f qemu-system-aarch64 2>/dev/null; exit 130' INT TERM; \
-	$(DOCKER_COMMAND_PREFIX) bash -lc '\
+	@$(DOCKER_COMMAND_PREFIX) bash -lc '\
+		set -o pipefail; \
 		cd $(REPO_ROOT)/e2e-tests && \
 		timeout $(QEMU_TIMEOUT) \
 			qemu-system-aarch64 -semihosting -cpu max,sve=off,sme=off -smp 4 -machine sbsa-ref \
@@ -96,7 +96,9 @@ test: $(VDRIVE_DIR)
 				-display none \
 				-no-reboot \
 				$(SERIAL_REDIRECT) \
-	' & wait $$!; echo $$? > Build/qemu-exit-code
+	' & QEMU_PID=$$!; \
+	trap "kill $$QEMU_PID 2>/dev/null; wait $$QEMU_PID 2>/dev/null; exit 130" INT TERM; \
+	wait $$QEMU_PID; echo $$? > Build/qemu-exit-code
 	$(call ENDGROUP)
 	@EXIT_CODE=$$(cat Build/qemu-exit-code); \
 	echo "=== Test output summary ==="; \
