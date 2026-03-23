@@ -18,12 +18,14 @@ all: $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
 # Build Secure EC Service
 # ------------------------------------------------------------
 $(QEMU_RUST_BIN): $(QEMU_RUST_DTS) builder-image
+	$(call GROUP,Build Secure EC Service)
 	$(DOCKER_COMMAND_PREFIX) bash -lc " \
 		cd $(REPO_ROOT)/secure-services && \
 		mkdir -p Build && \
 		cd platform && \
 		cargo objcopy --target=aarch64-unknown-none --release -- -O binary ../$(QEMU_RUST_BIN) \
 	"
+	$(call ENDGROUP)
 
 # ------------------------------------------------------------
 # Copy DTS file to build directory

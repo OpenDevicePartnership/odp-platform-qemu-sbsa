@@ -15,6 +15,17 @@ BUILDER_IMAGE_DEPS := $(DEVCONTAINER_STAMP)
 endif
 
 # ------------------------------------------------------------
+# CI log grouping (GitHub Actions foldable sections)
+# ------------------------------------------------------------
+ifeq ($(CI),true)
+GROUP = @echo '::group::$(1)'
+ENDGROUP = @echo '::endgroup::'
+else
+GROUP =
+ENDGROUP =
+endif
+
+# ------------------------------------------------------------
 # Devcontainer command variables
 # ------------------------------------------------------------
 ifeq ($(IN_DEVCONTAINER),1)

@@ -15,17 +15,20 @@ all: patina-qemu-ec
 # Build UEFI without EC Support
 # ------------------------------------------------------------
 patina-qemu: builder-image
+	$(call GROUP,Build UEFI (no EC))
 	$(DOCKER_COMMAND_PREFIX) bash -lc " \
 		cd $(REPO_ROOT)/bios/patina-qemu && \
 		stuart_setup -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
 		stuart_update -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
 		stuart_build -c Platforms/QemuSbsaPkg/PlatformBuild.py \
 	"
+	$(call ENDGROUP)
 
 # ------------------------------------------------------------
 # Build UEFI with EC Support
 # ------------------------------------------------------------
 patina-qemu-ec: builder-image
+	$(call GROUP,Build UEFI with EC)
 	$(DOCKER_COMMAND_PREFIX) bash -lc " \
 		cd $(REPO_ROOT)/bios/patina-qemu && \
 		stuart_setup -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
@@ -35,6 +38,7 @@ patina-qemu-ec: builder-image
 			MSSP_RUST_BIN_FILE=$(REPO_ROOT)/secure-services/Build/qemu-ec-sp.bin \
 			MSSP_RUST_DTS_FILE=$(REPO_ROOT)/secure-services/Build/qemu-ec-sp.dts \
 	"
+	$(call ENDGROUP)
 
 builder-shell: builder-image
 	$(DOCKER_COMMAND_PREFIX) bash

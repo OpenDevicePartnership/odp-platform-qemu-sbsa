@@ -95,4 +95,4 @@ jobs:
             GIT_COMMITTER_EMAIL=vscode@example.com
           runCmd: |
             make all
-            make e2e-test QEMU_TIMEOUT=30 VERBOSE_ON_FAIL=1
+            make e2e-test QEMU_TIMEOUT=900

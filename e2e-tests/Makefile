@@ -26,6 +26,22 @@ QEMU_TIMEOUT ?= 180
 # Virtual drive directory for UEFI Shell to find test EFI binaries
 VDRIVE_DIR := Build/vdrive
 
+# Tee QEMU serial output to stdout (auto-enabled in CI)
+ifeq ($(CI),true)
+SERIAL_TEE ?= 1
+else
+SERIAL_TEE ?= 0
+endif
+
+# Serial output redirection: tee to stdout+file, or just file
+ifeq ($(SERIAL_TEE),1)
+SERIAL_FLAG := -serial stdio
+SERIAL_REDIRECT := 2>&1 | tee Build/test-output.log
+else
+SERIAL_FLAG := -serial file:Build/test-output.log
+SERIAL_REDIRECT :=
+endif
+
 # All test EFI binaries
 TEST_EFIS := $(THERMAL_EFI)
 
@@ -37,10 +53,12 @@ all: build
 
 .PHONY: build
 build: builder-image
+	$(call GROUP,Build E2E test binaries)
 	$(DOCKER_COMMAND_PREFIX) bash -lc " \
 		cd $(REPO_ROOT)/e2e-tests && \
 		cargo build --release \
 	"
+	$(call ENDGROUP)
 
 # ------------------------------------------------------------
 # Prepare the virtual FAT drive with test binaries + startup.nsh
@@ -58,7 +76,9 @@ $(VDRIVE_DIR): build $(TEST_EFIS) startup.nsh
 test: $(VDRIVE_DIR)
 	@mkdir -p Build
 	@echo "=== Running E2E tests (timeout=$(QEMU_TIMEOUT)s) ==="
-	@$(DOCKER_COMMAND_PREFIX) bash -lc '\
+	$(call GROUP,QEMU serial output)
+	@trap '$(DOCKER_COMMAND_PREFIX) pkill -f qemu-system-aarch64 2>/dev/null; exit 130' INT TERM; \
+	$(DOCKER_COMMAND_PREFIX) bash -lc '\
 		cd $(REPO_ROOT)/e2e-tests && \
 		timeout $(QEMU_TIMEOUT) \
 			qemu-system-aarch64 -semihosting -cpu max,sve=off,sme=off -smp 4 -machine sbsa-ref \
@@ -72,39 +92,32 @@ test: $(VDRIVE_DIR)
 				-device qemu-xhci,id=usb -device usb-mouse,id=input0,bus=usb.0,port=1 \
 				-device usb-kbd,id=input1,bus=usb.0,port=2 \
 				-drive file=fat:rw:$(VDRIVE_DIR),format=raw,media=disk \
-				-serial file:Build/test-output.log \
+				$(SERIAL_FLAG) \
 				-display none \
 				-no-reboot \
-	'; \
-	EXIT_CODE=$$?; \
-	echo ""; \
+				$(SERIAL_REDIRECT) \
+	' & wait $$!; echo $$? > Build/qemu-exit-code
+	$(call ENDGROUP)
+	@EXIT_CODE=$$(cat Build/qemu-exit-code); \
 	echo "=== Test output summary ==="; \
 	grep -E "\[(PASS|FAIL)\]" Build/test-output.log || true; \
 	echo ""; \
 	if ! grep -q "EC Secure Partition E2E Tests" Build/test-output.log; then \
 		echo "RESULT: TESTS NEVER RAN (banner not found in output)"; \
-		TEST_FAILED=1; \
+		exit 1; \
 	elif grep -q "\[FAIL\]" Build/test-output.log; then \
 		echo "RESULT: SOME TESTS FAILED"; \
-		TEST_FAILED=1; \
+		exit 1; \
 	elif grep -q "\[PASS\]" Build/test-output.log; then \
 		echo "RESULT: ALL TESTS PASSED"; \
-		TEST_FAILED=0; \
+		exit 0; \
 	elif [ "$$EXIT_CODE" = "124" ]; then \
 		echo "RESULT: TIMED OUT (no test output seen)"; \
-		TEST_FAILED=1; \
+		exit 1; \
 	else \
 		echo "RESULT: NO TEST OUTPUT FOUND (exit code $$EXIT_CODE)"; \
-		TEST_FAILED=1; \
-	fi; \
-	if [ "$$TEST_FAILED" = "1" ] && [ "$(VERBOSE_ON_FAIL)" = "1" ]; then \
-		echo ""; \
-		echo "=== Full QEMU serial output ==="; \
-		cat Build/test-output.log 2>/dev/null || echo "(no log file)"; \
-		echo ""; \
-		echo "=== End of QEMU serial output ==="; \
-	fi; \
-	exit $$TEST_FAILED
+		exit 1; \
+	fi
 
 # ------------------------------------------------------------
 # Clean build artifacts
