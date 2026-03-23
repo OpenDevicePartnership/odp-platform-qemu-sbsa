@@ -7,12 +7,16 @@ This configuration has been tested on a windows running WSL Ubuntu 24.04 with Vi
 After cloning the repository locally to WSL make sure from Visual Studio Code you have the WSL extension
 installed to allow you to open code from terminal.
 
-From the root folder run `code .` to start new VS code session. 
+From the root folder run `code .` to start new VS code session.
 When prompted select to re-open in a container which will setup all the required tools and packages.
 
 From VS code menu run  `Terminal -> New Terminal` and run  `make all` from the root to rebuild all components.
 
 To run QEMU with the image you generated you can run `make run` from the root folder
+
+To run end-to-end tests against the secure partition: `make e2e-test`
+(builds everything first, then launches QEMU and runs the test suite).
+See [docs/e2e-tests.md](docs/e2e-tests.md) for details.
 
 Each sub folder has its own Makefile script to build each subcomponent.
 
@@ -23,6 +27,8 @@ odp-platform-qemu-sbsa
   |- .github/           Github automation support (CI/CD)
   |- .devcontainer/     Devcontainer definitions
   |- bios/              ACPI, UEFI, TF-A, Hafnium and image creation
+  |- docs/              Documentation
+  |- e2e-tests/         End-to-end tests for secure partition services
   |- ec/                EC MCU code
   |- secure-partition/  EC services and other secure partition code
   |- os-image/          Scripts and steps for OS image generation

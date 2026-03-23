@@ -49,10 +49,17 @@ run-in-devcontainer: all
 	$(DOCKER_COMMAND_PREFIX) bash -lc "make run"
 
 # ------------------------------------------------------------
+# Run E2E tests against the secure partition
+# ------------------------------------------------------------
+e2e-test: all
+	$(MAKE) -C e2e-tests test
+
+# ------------------------------------------------------------
 # Clean everything
 # ------------------------------------------------------------
 clean:
 	$(MAKE) -C secure-services clean
 	$(MAKE) -C bios clean
+	$(MAKE) -C e2e-tests clean
 
-.PHONY: all secure-services bios run run-in-devcontainer clean
+.PHONY: all secure-services bios run run-in-devcontainer e2e-test clean

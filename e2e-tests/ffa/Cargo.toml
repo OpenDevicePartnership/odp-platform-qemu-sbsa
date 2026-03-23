@@ -1,0 +1,9 @@
+[package]
+name = "ffa"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = { version = "0.4", default-features = false }
+odp-ffa = { git = "https://github.com/OpenDevicePartnership/odp-secure-services" }
+uuid = { version = "1.0", default-features = false, features = ["v1"] }
