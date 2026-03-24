@@ -110,7 +110,7 @@ test: $(VDRIVE_DIR)
 	elif grep -q "\[FAIL\]" Build/test-output.log; then \
 		echo "RESULT: SOME TESTS FAILED"; \
 		exit 1; \
-	elif grep -q "\[PASS\]" Build/test-output.log; then \
+	elif [ "$$EXIT_CODE" = "0" ] && grep -q '^--- Results: [0-9]\+ passed, 0 failed ---$$' Build/test-output.log; then \
 		echo "RESULT: ALL TESTS PASSED"; \
 		exit 0; \
 	elif [ "$$EXIT_CODE" = "124" ]; then \

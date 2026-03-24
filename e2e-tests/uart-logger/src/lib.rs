@@ -38,7 +38,8 @@ impl Log for UartLogger {
     }
 
     fn log(&self, record: &Record) {
-        let _ = writeln!(UartLogger, "{}", record.args());
+        let mut uart = UartLogger;
+        let _ = writeln!(&mut uart, "{}", record.args());
     }
 
     fn flush(&self) {}
