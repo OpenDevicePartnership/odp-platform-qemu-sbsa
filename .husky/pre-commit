@@ -1,0 +1,21 @@
+#!/bin/sh
+# Pre-commit hook installed by husky-rs.
+# Checks formatting and runs clippy on the Rust projects in this repo.
+
+set -e
+
+PROJECTS="e2e-tests secure-services/platform"
+
+echo "=== pre-commit: checking Rust formatting ==="
+for proj in $PROJECTS; do
+    echo "  -> $proj"
+    (cd "$proj" && cargo fmt -- --check)
+done
+
+echo "=== pre-commit: running clippy ==="
+for proj in $PROJECTS; do
+    echo "  -> $proj"
+    (cd "$proj" && cargo clippy -- -D warnings)
+done
+
+echo "=== pre-commit: all checks passed ==="

@@ -133,13 +133,13 @@ fn test_partition_discovery(results: &mut TestResults) -> Option<u16> {
     match ffa::ffa_partition_info_get_regs(&THERMAL_UUID) {
         Ok((count, partitions)) => {
             log::debug!("  partition_info: count={}", count);
-            for i in 0..count {
+            for (i, part) in partitions.iter().enumerate().take(count) {
                 log::debug!(
                     "    [{}] id={:#06x} ctx={} props={:#010x}",
                     i,
-                    partitions[i].partition_id,
-                    partitions[i].execution_ctx_count,
-                    partitions[i].properties,
+                    part.partition_id,
+                    part.execution_ctx_count,
+                    part.properties,
                 );
             }
             if count > 0 {
@@ -177,7 +177,7 @@ fn test_thermal_get_temperature(results: &mut TestResults, our_id: u16, ec_id: u
     let payload = DirectMessagePayload::from_iter(
         [EC_THM_GET_TMP, sensor_id]
             .into_iter()
-            .chain(core::iter::repeat(0u8).take(14 * 8 - 2)),
+            .chain(core::iter::repeat_n(0u8, 14 * 8 - 2)),
     );
 
     // Build SMC registers directly matching the FF-A spec for DIRECT_REQ2.
@@ -229,7 +229,7 @@ fn test_thermal_get_temperature(results: &mut TestResults, our_id: u16, ec_id: u
             "  FFA_YIELD/INTERRUPT (x0={:#x}), calling FFA_RUN...",
             resp[0]
         );
-        let run_arg = ((ec_id as u64) << 16) | 0u64; // target endpoint, vCPU 0
+        let run_arg = (ec_id as u64) << 16; // target endpoint, vCPU 0
         resp = ffa::raw_smc(
             FFA_RUN, run_arg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         );

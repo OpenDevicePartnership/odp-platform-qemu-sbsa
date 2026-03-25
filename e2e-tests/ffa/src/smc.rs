@@ -8,6 +8,7 @@
 
 /// Issue an SMC #0 with all 18 GP registers (x0–x17).
 #[inline(always)]
+#[allow(clippy::too_many_arguments)]
 pub fn raw_smc(
     x0: u64,
     x1: u64,

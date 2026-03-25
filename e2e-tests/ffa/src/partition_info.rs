@@ -89,7 +89,7 @@ pub fn ffa_partition_info_get_regs(
     let count = (last_idx - start_idx + 1).min(4);
     // Each descriptor occupies ceil(desc_size / 8) registers, minimum 3.
     let regs_per_desc = if desc_size > 0 {
-        (desc_size + 7) / 8
+        desc_size.div_ceil(8)
     } else {
         3
     };
@@ -105,13 +105,13 @@ pub fn ffa_partition_info_get_regs(
         properties: 0,
     }; 4];
 
-    for i in 0..count {
+    for (i, info) in infos.iter_mut().enumerate().take(count) {
         let base = i * regs_per_desc;
         if base >= regs.len() {
             break;
         }
         let r0 = regs[base];
-        infos[i] = PartitionInfo {
+        *info = PartitionInfo {
             partition_id: (r0 & 0xFFFF) as u16,
             execution_ctx_count: ((r0 >> 16) & 0xFFFF) as u16,
             properties: ((r0 >> 32) & 0xFFFFFFFF) as u32,

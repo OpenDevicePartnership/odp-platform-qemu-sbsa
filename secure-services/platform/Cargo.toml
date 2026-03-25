@@ -12,9 +12,6 @@ categories = ["embedded", "no-std"]
 [features]
 default = []
 
-[target.'cfg(target_os = "none")'.dependencies]
-hafnium = { git = "https://github.com/OpenDevicePartnership/odp-secure-services" }
-
 [dependencies]
 aarch64-cpu = "10.0.0"
 aarch64-paging = { version = "0.10.0", default-features = false }

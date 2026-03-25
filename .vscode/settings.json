@@ -5,6 +5,7 @@
     "rust-analyzer.cargo.features": "all",
     "files.insertFinalNewline": true,
     "rust-analyzer.linkedProjects": [
+        "Cargo.toml",
         "secure-services/platform/Cargo.toml",
         "e2e-tests/Cargo.toml",
     ],
