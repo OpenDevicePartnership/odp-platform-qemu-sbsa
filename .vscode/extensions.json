@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "rust-lang.rust-analyzer",
+        "ms-vscode.makefile-tools",
+        "bierner.markdown-mermaid",
+        "tamasfe.even-better-toml"
+    ]
+}

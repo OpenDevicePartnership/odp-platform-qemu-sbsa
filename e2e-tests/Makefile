@@ -76,6 +76,10 @@ $(VDRIVE_DIR): build $(TEST_EFIS) startup.nsh
 test: $(VDRIVE_DIR)
 	@mkdir -p Build
 	@echo "=== Running E2E tests (timeout=$(QEMU_TIMEOUT)s) ==="
+ifeq ($(SERIAL_TEE),1)
+else
+	@echo "    (serial output streaming to Build/test-output.log)"
+endif
 	$(call GROUP,QEMU serial output)
 	@$(DOCKER_COMMAND_PREFIX) bash -lc '\
 		set -o pipefail; \

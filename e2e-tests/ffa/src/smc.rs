@@ -9,11 +9,24 @@
 /// Issue an SMC #0 with all 18 GP registers (x0–x17).
 #[inline(always)]
 pub fn raw_smc(
-    x0: u64, x1: u64, x2: u64, x3: u64,
-    x4: u64, x5: u64, x6: u64, x7: u64,
-    x8: u64, x9: u64, x10: u64, x11: u64,
-    x12: u64, x13: u64, x14: u64, x15: u64,
-    x16: u64, x17: u64,
+    x0: u64,
+    x1: u64,
+    x2: u64,
+    x3: u64,
+    x4: u64,
+    x5: u64,
+    x6: u64,
+    x7: u64,
+    x8: u64,
+    x9: u64,
+    x10: u64,
+    x11: u64,
+    x12: u64,
+    x13: u64,
+    x14: u64,
+    x15: u64,
+    x16: u64,
+    x17: u64,
 ) -> [u64; 18] {
     let mut result = [0u64; 18];
     unsafe {

@@ -11,7 +11,7 @@ include Common.mk
 # ------------------------------------------------------------
 # Default target
 # ------------------------------------------------------------
-all: secure-services bios
+all: secure-services bios e2e-tests
 
 # Ensure bios builds after secure-services (bios consumes secure-services artifacts)
 bios: secure-services
@@ -31,7 +31,7 @@ bios:
 # ------------------------------------------------------------
 # Run QEMU with the built UEFI firmware
 # ------------------------------------------------------------
-run: all
+run: secure-services bios
 	qemu-system-aarch64 -semihosting -cpu max,sve=off,sme=off -smp 4 -machine sbsa-ref \
 		-global driver=cfi.pflash01,property=secure,value=on -m 4G \
 		-drive if=pflash,format=raw,unit=0,file=bios/patina-qemu/Build/QemuSbsaPkg/DEBUG_GCC5/FV/SECURE_FLASH0.fd \
@@ -45,13 +45,13 @@ run: all
 		-serial mon:stdio \
 		-display vnc=:1
 
-run-in-devcontainer: all
+run-in-devcontainer: secure-services bios
 	$(DOCKER_COMMAND_PREFIX) bash -lc "make run"
 
 # ------------------------------------------------------------
 # Run E2E tests against the secure partition
 # ------------------------------------------------------------
-e2e-test: all
+e2e-test: secure-services bios
 	$(MAKE) -C e2e-tests test
 
 # ------------------------------------------------------------

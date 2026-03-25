@@ -8,6 +8,6 @@ An implementation of embedded controller secure partition for QEMU haf-ec-servic
 ## Building
 
 ```
-cargo build --target=aarch64-unknown-none
-cargo objcopy --target=aarch64-unknown-none -- -O binary qemu-ec-sp.bin
+cargo build
+cargo objcopy -- -O binary qemu-ec-sp.bin
 ```

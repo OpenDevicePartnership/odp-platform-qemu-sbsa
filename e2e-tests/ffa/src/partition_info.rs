@@ -28,7 +28,9 @@ pub struct PartitionInfo {
 ///
 /// TODO(odp-ffa): This uses raw SMC assembly because `odp_ffa::smc::ffa_smc`
 /// is pub(crate). Once this is upstreamed, it should use the `Function` trait.
-pub fn ffa_partition_info_get_regs(uuid: &Uuid) -> Result<(usize, [PartitionInfo; 4]), odp_ffa::Error> {
+pub fn ffa_partition_info_get_regs(
+    uuid: &Uuid,
+) -> Result<(usize, [PartitionInfo; 4]), odp_ffa::Error> {
     // Pack UUID into x1/x2 using the same convention as DirectMessage:
     // odp-ffa uses Uuid::as_u64_pair() -> (high, low), then .to_be() for each.
     let (uuid_high, uuid_low) = uuid.as_u64_pair();
@@ -36,13 +38,33 @@ pub fn ffa_partition_info_get_regs(uuid: &Uuid) -> Result<(usize, [PartitionInfo
     let x2 = uuid_low.to_be();
 
     let result: [u64; 18] = raw_smc(
-        FFA_PARTITION_INFO_GET_REGS, x1, x2, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        FFA_PARTITION_INFO_GET_REGS,
+        x1,
+        x2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
     );
 
     log::debug!("PART_INFO_GET_REGS input: x1={:#018x} x2={:#018x}", x1, x2);
-    log::debug!("PART_INFO_GET_REGS output: x0={:#018x} x2={:#018x} x3={:#018x}",
-        result[0], result[2], result[3]);
+    log::debug!(
+        "PART_INFO_GET_REGS output: x0={:#018x} x2={:#018x} x3={:#018x}",
+        result[0],
+        result[2],
+        result[3]
+    );
 
     if result[0] == FFA_ERROR {
         let error_code = odp_ffa::ErrorCode::try_from(result[2] as i64)
@@ -66,7 +88,11 @@ pub fn ffa_partition_info_get_regs(uuid: &Uuid) -> Result<(usize, [PartitionInfo
     let last_idx = ((meta >> 16) & 0xFFFF) as usize;
     let count = (last_idx - start_idx + 1).min(4);
     // Each descriptor occupies ceil(desc_size / 8) registers, minimum 3.
-    let regs_per_desc = if desc_size > 0 { (desc_size + 7) / 8 } else { 3 };
+    let regs_per_desc = if desc_size > 0 {
+        (desc_size + 7) / 8
+    } else {
+        3
+    };
 
     // Partition descriptors are packed starting at x3 (result[3]).
     // Each descriptor: reg+0 = (properties[63:32] | exec_ctx[31:16] | part_id[15:0])

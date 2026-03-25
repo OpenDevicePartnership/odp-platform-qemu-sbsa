@@ -2,9 +2,12 @@
     "editor.formatOnSave": true,
     "rust-analyzer.checkOnSave": true,
     "rust-analyzer.check.allTargets": false,
-    "rust-analyzer.cargo.target": "thumbv8m.main-none-eabihf",
     "rust-analyzer.cargo.features": "all",
-    "rust-analyzer.check.command": "clippy",
+    "files.insertFinalNewline": true,
+    "rust-analyzer.linkedProjects": [
+        "secure-services/platform/Cargo.toml",
+        "e2e-tests/Cargo.toml",
+    ],
     "[toml]": {
         "editor.defaultFormatter": "tamasfe.even-better-toml"
     },

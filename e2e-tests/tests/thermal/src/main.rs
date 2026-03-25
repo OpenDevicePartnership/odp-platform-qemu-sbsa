@@ -15,10 +15,7 @@
 
 extern crate alloc;
 
-use ffa::{
-    DirectMessagePayload, Function, IdGet,
-    Version,
-};
+use ffa::{DirectMessagePayload, Function, IdGet, Version};
 use uefi::prelude::*;
 use uefi::runtime::{self, ResetType};
 use uuid::Uuid;
@@ -156,7 +153,10 @@ fn test_partition_discovery(results: &mut TestResults) -> Option<u16> {
                 results.pass("partition_discovery");
                 Some(id)
             } else {
-                results.fail("partition_discovery", "no partitions found for thermal UUID");
+                results.fail(
+                    "partition_discovery",
+                    "no partitions found for thermal UUID",
+                );
                 None
             }
         }
@@ -203,32 +203,52 @@ fn test_thermal_get_temperature(results: &mut TestResults, our_id: u16, ec_id: u
     // Issue the direct request SMC.
     let mut resp = ffa::raw_smc(
         FFA_MSG_SEND_DIRECT_REQ2,
-        x1, x2, x3,
-        payload_regs[0], payload_regs[1], payload_regs[2], payload_regs[3],
-        payload_regs[4], payload_regs[5], payload_regs[6], payload_regs[7],
-        payload_regs[8], payload_regs[9], payload_regs[10], payload_regs[11],
-        payload_regs[12], payload_regs[13],
+        x1,
+        x2,
+        x3,
+        payload_regs[0],
+        payload_regs[1],
+        payload_regs[2],
+        payload_regs[3],
+        payload_regs[4],
+        payload_regs[5],
+        payload_regs[6],
+        payload_regs[7],
+        payload_regs[8],
+        payload_regs[9],
+        payload_regs[10],
+        payload_regs[11],
+        payload_regs[12],
+        payload_regs[13],
     );
 
     // Retry loop: handle FFA_YIELD / FFA_INTERRUPT by calling FFA_RUN.
     let mut retries = 0;
     while (resp[0] == FFA_YIELD || resp[0] == FFA_INTERRUPT) && retries < 100 {
-        log::debug!("  FFA_YIELD/INTERRUPT (x0={:#x}), calling FFA_RUN...", resp[0]);
+        log::debug!(
+            "  FFA_YIELD/INTERRUPT (x0={:#x}), calling FFA_RUN...",
+            resp[0]
+        );
         let run_arg = ((ec_id as u64) << 16) | 0u64; // target endpoint, vCPU 0
-        resp = ffa::raw_smc(FFA_RUN, run_arg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        resp = ffa::raw_smc(
+            FFA_RUN, run_arg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        );
         retries += 1;
     }
 
     if resp[0] != FFA_MSG_SEND_DIRECT_RESP2 {
         results.fail("thermal_get_temperature", "unexpected response FID");
-        log::error!("  x0={:#018x} (expected DIRECT_RESP2={:#x})", resp[0], FFA_MSG_SEND_DIRECT_RESP2);
+        log::error!(
+            "  x0={:#018x} (expected DIRECT_RESP2={:#x})",
+            resp[0],
+            FFA_MSG_SEND_DIRECT_RESP2
+        );
         return;
     }
 
     // Parse the response payload from x4..x17.
-    let resp_payload = DirectMessagePayload::from_iter(
-        resp[4..18].iter().flat_map(|r| r.to_le_bytes()),
-    );
+    let resp_payload =
+        DirectMessagePayload::from_iter(resp[4..18].iter().flat_map(|r| r.to_le_bytes()));
 
     // Response layout: byte 0..8 = status (i64), byte 8..16 = temperature (u64)
     let status = resp_payload.u64_at(0) as i64;
