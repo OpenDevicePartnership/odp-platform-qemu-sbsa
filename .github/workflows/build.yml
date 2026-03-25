@@ -80,6 +80,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Cache sccache
+        uses: actions/cache@v4
+        with:
+          path: .sccache
+          key: sccache-${{ runner.arch }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            sccache-${{ runner.arch }}-${{ github.ref }}-
+            sccache-${{ runner.arch }}-
+
       - name: Build devcontainer image
         uses: devcontainers/ci@v0.3
         with:
@@ -94,6 +103,8 @@ jobs:
             CI=true
             GIT_COMMITTER_NAME=vscode
             GIT_COMMITTER_EMAIL=vscode@example.com
+            SCCACHE_DIR=/workspaces/odp-platform-qemu-sbsa/.sccache
           runCmd: |
             make all
             make e2e-test QEMU_TIMEOUT=900
+            sccache --show-stats
