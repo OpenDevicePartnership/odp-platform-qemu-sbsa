@@ -37,6 +37,7 @@ patina-qemu-ec: builder-image
 			HAF_TFA_BUILD=TRUE \
 			MSSP_RUST_BIN_FILE=$(REPO_ROOT)/secure-services/Build/qemu-ec-sp.bin \
 			MSSP_RUST_DTS_FILE=$(REPO_ROOT)/secure-services/Build/qemu-ec-sp.dts \
+			FEATURE_CONFIG_PATH=$(REPO_ROOT)/bios/platform \
 	"
 	$(call ENDGROUP)
 
