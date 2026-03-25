@@ -39,7 +39,7 @@ endif
 
 $(DEVCONTAINER_STAMP): $(DEVCONTAINER_FILES)
 	@echo "=== Ensuring devcontainer is up to date ==="
-	devcontainer up $(DEVCONTAINER_WORKSPACE_FLAGS)
+	devcontainer up --remove-existing-container $(DEVCONTAINER_WORKSPACE_FLAGS)
 	@touch "$@"
 
 
@@ -53,7 +53,7 @@ ifeq ($(IN_DEVCONTAINER),1)
 else
 	@if ! devcontainer exec $(DEVCONTAINER_WORKSPACE_FLAGS) true >/dev/null 2>&1; then \
 		echo "=== Devcontainer is not running, bringing it up ==="; \
-		devcontainer up $(DEVCONTAINER_WORKSPACE_FLAGS); \
+		devcontainer up --remove-existing-container $(DEVCONTAINER_WORKSPACE_FLAGS); \
 		touch "$(DEVCONTAINER_STAMP)"; \
 	else \
 		echo "=== Devcontainer already up to date ==="; \

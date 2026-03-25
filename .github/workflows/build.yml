@@ -17,7 +17,14 @@ jobs:
   devcontainer:
     name: Build Multiplatform Devcontainer
     runs-on: ubuntu-24.04
+    env:
+      # Docker-safe branch tag: foo/bar -> foo-bar
+      BRANCH_TAG: ${{ github.head_ref && format('{0}', github.head_ref) || github.ref_name }}
     steps:
+      - name: Sanitize branch tag
+        id: branch
+        run: echo "tag=$(echo '${{ env.BRANCH_TAG }}' | tr '/' '-' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
       - name: Checkout Code
         uses: actions/checkout@v6
 
@@ -45,9 +52,11 @@ jobs:
         with:
           imageName: ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer
           cacheFrom: |
-            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:cache
+            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:${{ steps.branch.outputs.tag }}
+            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:main
             ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest
-            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:${{ steps.branch.outputs.tag }}
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:main
             ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest
           platform: linux/amd64,linux/arm64
           # For now, never push, until ODP org is set up so CI can push to the
@@ -58,7 +67,13 @@ jobs:
   build-test-bios:
     name: Build & Test QEMU Bios
     runs-on: ubuntu-24.04-arm
+    env:
+      BRANCH_TAG: ${{ github.head_ref && format('{0}', github.head_ref) || github.ref_name }}
     steps:
+      - name: Sanitize branch tag
+        id: branch
+        run: echo "tag=$(echo '${{ env.BRANCH_TAG }}' | tr '/' '-' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
       - name: Cache git folder
         uses: actions/cache@v4
         with:
@@ -84,7 +99,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .sccache
-          key: sccache-${{ runner.arch }}-${{ github.ref }}-${{ github.sha }}
+          key: sccache-${{ runner.arch }}-${{ github.ref }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             sccache-${{ runner.arch }}-${{ github.ref }}-
             sccache-${{ runner.arch }}-
@@ -94,16 +109,17 @@ jobs:
         with:
           imageName: ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer
           cacheFrom: |
+            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:${{ steps.branch.outputs.tag }}
+            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:main
             ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest
-            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:cache
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:${{ steps.branch.outputs.tag }}
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:main
             ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest
-            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache
           push: never
           env: |
             CI=true
             GIT_COMMITTER_NAME=vscode
             GIT_COMMITTER_EMAIL=vscode@example.com
-            SCCACHE_DIR=/workspaces/odp-platform-qemu-sbsa/.sccache
           runCmd: |
             make all
             make e2e-test QEMU_TIMEOUT=900

@@ -49,12 +49,20 @@ fi
 echo "==> Image name: ${IMAGE_NAME}"
 echo "==> Workspace:  ${REPO_ROOT}"
 
+# Derive a Docker-safe tag from the current branch name
+BRANCH="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
+BRANCH_TAG="$(echo "$BRANCH" | tr '/' '-' | tr '[:upper:]' '[:lower:]')"
+
+echo "==> Branch:     ${BRANCH}"
+echo "==> Branch tag:  ${BRANCH_TAG}"
+
 # Step 1: Run devcontainer build to generate the Dockerfile-with-features
-# wrapper and populate local BuildKit cache. Output is cache-only (no push).
+# wrapper, populate local BuildKit cache, and push the image to the registry.
 echo "==> Generating Dockerfile-with-features via devcontainer build..."
 devcontainer build \
     --workspace-folder "$REPO_ROOT" \
-    --image-name "$IMAGE_NAME" \
+    --image-name "${IMAGE_NAME}:${BRANCH_TAG}" \
+    --image-name "${IMAGE_NAME}:latest" \
     --platform linux/amd64,linux/arm64 \
     --push true
 

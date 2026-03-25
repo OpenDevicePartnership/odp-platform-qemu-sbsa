@@ -4,9 +4,9 @@
     "context": "..",
     "cacheFrom": [
       "ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest",
-      "ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:cache",
+      "ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:main",
       "ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest",
-      "ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:cache"
+      "ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:main"
     ]
   },
   "forwardPorts": [
@@ -17,6 +17,9 @@
     5900 // VNC
   ],
   "mounts": [],
+  "containerEnv": {
+    "SCCACHE_DIR": "${containerWorkspaceFolder}/.sccache"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
