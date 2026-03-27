@@ -16,7 +16,7 @@ on:
 jobs:
   lint:
     name: Rust Lint & Format
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04-4core
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -35,7 +35,10 @@ jobs:
 
   devcontainer:
     name: Build Multiplatform Devcontainer
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-4core
+    permissions:
+      contents: read
+      packages: write
     env:
       # Docker-safe branch tag: foo/bar -> foo-bar
       BRANCH_TAG: ${{ github.head_ref && format('{0}', github.head_ref) || github.ref_name }}
@@ -69,23 +72,20 @@ jobs:
       - name: Build devcontainer image
         uses: devcontainers/ci@v0.3
         with:
-          imageName: ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer
+          imageName: ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer
           cacheFrom: |
             ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:${{ steps.branch.outputs.tag }}
             ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:main
             ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest
-            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:${{ steps.branch.outputs.tag }}
-            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:main
-            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:${{ steps.branch.outputs.tag }}
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:main
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:latest
           platform: linux/amd64,linux/arm64
-          # For now, never push, until ODP org is set up so CI can push to the
-          # correct registry. Once that's done, we can change this to `always`
-          # and remove the `cacheFrom` entries for the dymk images.
-          push: never
+          push: filter
 
   build-test-bios:
     name: Build & Test QEMU Bios
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04-4core
     env:
       BRANCH_TAG: ${{ github.head_ref && format('{0}', github.head_ref) || github.ref_name }}
     steps:
@@ -126,14 +126,16 @@ jobs:
       - name: Build devcontainer image
         uses: devcontainers/ci@v0.3
         with:
-          imageName: ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer
+          imageName: ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer
           cacheFrom: |
             ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:${{ steps.branch.outputs.tag }}
             ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:main
             ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest
-            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:${{ steps.branch.outputs.tag }}
-            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:main
-            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa-devcontainer:latest
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:${{ steps.branch.outputs.tag }}
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:main
+            ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:latest
+          # For build & test, we don't push the devcontainer - the "Build Multiplatform Devcontainer" job will build & push
+          # the multiplatform container image.
           push: never
           env: |
             CI=true
