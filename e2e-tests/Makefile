@@ -47,6 +47,11 @@ SERIAL_FLAG := -serial file:Build/test-output.log
 SERIAL_REDIRECT :=
 endif
 
+# Coverage plugin
+COVERAGE_PLUGIN := coverage-plugin/libcoverage.so
+COVERAGE_LOG := Build/coverage.log
+SP_ELF := ../secure-services/platform/target/aarch64-unknown-none/coverage/qemu-ec-sp
+
 # All test EFI binaries
 TEST_EFIS := $(THERMAL_EFI) $(TPM_EFI)
 
@@ -77,8 +82,16 @@ $(VDRIVE_DIR): build $(TEST_EFIS) startup.nsh
 # ------------------------------------------------------------
 # Run tests with timeout, capture output, report results
 # ------------------------------------------------------------
+# ------------------------------------------------------------
+# Build the TCG coverage plugin (.so loaded by QEMU)
+# ------------------------------------------------------------
+$(COVERAGE_PLUGIN): builder-image
+	$(call GROUP,Build coverage plugin)
+	make -C coverage-plugin
+	$(call ENDGROUP)
+
 .PHONY: test
-test: $(VDRIVE_DIR)
+test: $(VDRIVE_DIR) $(COVERAGE_PLUGIN)
 	@mkdir -p Build
 	@echo "=== Running E2E tests (timeout=$(QEMU_TIMEOUT)s) ==="
 ifeq ($(SERIAL_TEE),1)
@@ -101,6 +114,7 @@ endif
 		timeout $(QEMU_TIMEOUT) \
 			qemu-system-aarch64 \
 				$(QEMU_COMMON_ARGS) \
+				-plugin file=$(COVERAGE_PLUGIN),outfile=$(COVERAGE_LOG) \
 				-drive if=pflash,format=raw,unit=0,file=$(SECURE_FLASH0) \
 				-drive if=pflash,format=raw,unit=1,file=$(QEMU_EFI),readonly=on \
 				-chardev socket,id=chrtpm,path=$(SWTPM_SOCK) \
@@ -138,6 +152,26 @@ endif
 		exit 1; \
 	fi
 
+# ------------------------------------------------------------
+# Generate coverage report from collected PCs
+# ------------------------------------------------------------
+.PHONY: coverage-report
+coverage-report:
+	$(call GROUP,Generate coverage report)
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/e2e-tests && \
+		python3 scripts/pcs-to-lcov.py \
+			--elf $(SP_ELF) \
+			--input $(COVERAGE_LOG) \
+			--output Build/coverage.info \
+			--source-prefix odp-secure-services \
+			--source-prefix odp-platform-qemu-sbsa && \
+		genhtml Build/coverage.info \
+			--ignore-errors source \
+			--output-directory Build/coverage-html \
+			--title 'EC Secure Partition Coverage' \
+	"
+	$(call ENDGROUP)
 
 # ------------------------------------------------------------
 # Clean build artifacts
@@ -147,5 +181,6 @@ clean:
 	rm -rf Build
 	$(DOCKER_COMMAND_PREFIX) bash -lc " \
 		cd $(REPO_ROOT)/e2e-tests && \
-		cargo clean \
+		cargo clean && \
+		make -C coverage-plugin clean \
 	"
