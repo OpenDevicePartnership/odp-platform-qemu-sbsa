@@ -74,9 +74,6 @@ jobs:
         with:
           imageName: ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer
           cacheFrom: |
-            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:${{ steps.branch.outputs.tag }}
-            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:main
-            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest
             ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:${{ steps.branch.outputs.tag }}
             ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:main
             ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:latest
@@ -128,9 +125,6 @@ jobs:
         with:
           imageName: ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer
           cacheFrom: |
-            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:${{ steps.branch.outputs.tag }}
-            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:main
-            ghcr.io/dymk/odp-platform-qemu-sbsa-devcontainer:latest
             ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:${{ steps.branch.outputs.tag }}
             ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:main
             ghcr.io/opendevicepartnership/odp-platform-qemu-sbsa/devcontainer:latest
