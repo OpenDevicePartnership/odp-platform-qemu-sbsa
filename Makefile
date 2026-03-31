@@ -13,19 +13,21 @@ include Common.mk
 # ------------------------------------------------------------
 all: secure-services bios e2e-tests
 
-# Ensure bios builds after secure-services (bios consumes secure-services artifacts)
-bios: secure-services
-
 # ------------------------------------------------------------
 # Build Secure Services
 # ------------------------------------------------------------
 secure-services:
 	$(MAKE) -C secure-services all
 
+# Build secure services with test features and coverage profile (for e2e tests)
+secure-services-test:
+	$(MAKE) -C secure-services all CARGO_FEATURES=test-bypass-locality-check CARGO_PROFILE=coverage
+
 # ------------------------------------------------------------
 # Build UEFI with EC support by default
+# Depends on secure-services (bios consumes secure-services artifacts)
 # ------------------------------------------------------------
-bios:
+bios: secure-services
 	$(MAKE) -C bios patina-qemu-ec
 
 # ------------------------------------------------------------
@@ -45,7 +47,10 @@ run-in-devcontainer: secure-services bios
 # ------------------------------------------------------------
 # Run E2E tests against the secure partition
 # ------------------------------------------------------------
-e2e-test: secure-services bios
+# Build secure-services-test first, then bios (skipping its normal
+# secure-services dependency to avoid overwriting the test binary).
+e2e-test: secure-services-test
+	$(MAKE) -C bios patina-qemu-ec
 	$(MAKE) -C e2e-tests test
 
 # ------------------------------------------------------------
@@ -56,4 +61,4 @@ clean:
 	$(MAKE) -C bios clean
 	$(MAKE) -C e2e-tests clean
 
-.PHONY: all secure-services bios run run-in-devcontainer e2e-test clean
+.PHONY: all secure-services secure-services-test bios run run-in-devcontainer e2e-test clean

@@ -25,6 +25,7 @@
 	 * EC_SVC_POWER 		7157addf-2fbe-4c63-ae95-efac16e3b01c
 	 * EC_SVC_BATTERY 		25cb5207-ac36-427d-aaef-3aa78877d27e
 	 * EC_SVC_THERMAL		31f56da7-593c-4d72-a4b3-8fc7171ac073
+	 * TPM2_SERVICE         17b862a4-1806-4faf-86b3-089a58353861
 	 */
 
 	compatible = "arm,ffa-manifest-1.0";
@@ -35,7 +36,8 @@
 		   <0x73120c33 0x5747e5fd 0x655b1998 0x02750339>,
 		   <0xdfad5771 0x634cbe2f 0xacef95ae 0x1cb0e316>,
                    <0x0752cb25 0x7d4236ac 0xa73aefaa 0x7ed27788>,
-		   <0xa76df531 0x724d3c59 0xc78fb3a4 0x73c01a17>;
+		   <0xa76df531 0x724d3c59 0xc78fb3a4 0x73c01a17>,
+		   <0xa462b817 0xaf4f0618 0x9a08b386 0x61383558>;
 	id = <0x8002>;
 	execution-ctx-count = <1>;
 	exception-level = <2>; /* SEL1*/
@@ -65,7 +67,7 @@
 			pages-count = <0x100>; /* 1MB of Heap space */
 			attributes = <0x3>;
 		};
-		
+
 		/*
 		 * Memory shared between Normal world and S-EL0.
 		 * Similar to ARM_SP_IMAGE_NS_BUF_MMAP.
@@ -77,6 +79,28 @@
 			attributes = <0xB>;
 		};
 
+	};
+
+	device-regions {
+		compatible = "arm,ffa-manifest-device-regions";
+
+		/* Internal TPM CRB — per-locality shadow registers used by TpmService.
+		 * Placed after the C-based MSSP's internal CRB (0x10000200000-0x10000210000).
+		 */
+		tpm_internal_crb {
+			description = "internal tpm crb";
+			base-address = <0x00000100 0x00210000>;
+			pages-count = <0x10>;
+			attributes = <0x3>;
+		};
+
+		/* External TPM CRB — swtpm MMIO registers. */
+		tpm_external_crb {
+			description = "external tpm crb";
+			base-address = <0x0 0x60120000>;
+			pages-count = <0x10>;
+			attributes = <0x3>;
+		};
 	};
 
 };

@@ -11,6 +11,7 @@ categories = ["embedded", "no-std"]
 
 [features]
 default = []
+test-bypass-locality-check = ["ec-service-lib/test-bypass-locality-check"]
 
 [dependencies]
 aarch64-cpu = "10.0.0"
@@ -28,3 +29,9 @@ uuid = { version = "1.0", default-features = false, features = ["v1"] }
 
 [build-dependencies]
 chrono = "0.4"
+
+[profile.release]
+
+[profile.coverage]
+inherits = "release"
+debug = true
