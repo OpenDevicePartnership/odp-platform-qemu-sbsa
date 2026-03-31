@@ -16,6 +16,7 @@ include ../Common.mk
 # Build output paths
 TARGET_DIR := target/aarch64-unknown-uefi/release
 THERMAL_EFI := $(TARGET_DIR)/thermal.efi
+TPM_EFI := $(TARGET_DIR)/tpm.efi
 BIOS_BUILD_DIR := ../$(BIOS_FV_DIR)
 SECURE_FLASH0 := $(BIOS_BUILD_DIR)/SECURE_FLASH0.fd
 QEMU_EFI := $(BIOS_BUILD_DIR)/QEMU_EFI.fd
@@ -25,6 +26,10 @@ QEMU_TIMEOUT ?= 180
 
 # Virtual drive directory for UEFI Shell to find test EFI binaries
 VDRIVE_DIR := Build/vdrive
+
+# swtpm state directory and socket path
+SWTPM_DIR := Build/tpm
+SWTPM_SOCK := $(SWTPM_DIR)/swtpm-sock
 
 # Tee QEMU serial output to stdout (auto-enabled in CI)
 ifeq ($(CI),true)
@@ -43,7 +48,7 @@ SERIAL_REDIRECT :=
 endif
 
 # All test EFI binaries
-TEST_EFIS := $(THERMAL_EFI)
+TEST_EFIS := $(THERMAL_EFI) $(TPM_EFI)
 
 # ------------------------------------------------------------
 # Build all test EFI binaries
@@ -84,16 +89,30 @@ endif
 	@$(DOCKER_COMMAND_PREFIX) bash -lc '\
 		set -o pipefail; \
 		cd $(REPO_ROOT)/e2e-tests && \
+		mkdir -p $(SWTPM_DIR) && \
+		rm -f $(SWTPM_SOCK) || exit 1; \
+		swtpm socket \
+			--tpmstate dir=$(SWTPM_DIR) \
+			--ctrl type=unixio,path=$(SWTPM_SOCK) \
+			--tpm2 --log level=20,file=Build/swtpm.log & \
+		SWTPM_PID=$$!; \
+		for i in $$(seq 1 50); do [ -S $(SWTPM_SOCK) ] && break; sleep 0.1; done; \
+		if [ ! -S $(SWTPM_SOCK) ]; then echo "ERROR: swtpm socket not created"; kill $$SWTPM_PID 2>/dev/null; exit 1; fi; \
 		timeout $(QEMU_TIMEOUT) \
 			qemu-system-aarch64 \
 				$(QEMU_COMMON_ARGS) \
 				-drive if=pflash,format=raw,unit=0,file=$(SECURE_FLASH0) \
 				-drive if=pflash,format=raw,unit=1,file=$(QEMU_EFI),readonly=on \
+				-chardev socket,id=chrtpm,path=$(SWTPM_SOCK) \
+				-tpmdev emulator,id=tpm0,chardev=chrtpm \
 				-drive file=fat:rw:$(VDRIVE_DIR),format=raw,media=disk \
 				$(SERIAL_FLAG) \
 				-display none \
 				-no-reboot \
-				$(SERIAL_REDIRECT) \
+				$(SERIAL_REDIRECT); \
+		QEMU_EXIT=$$?; \
+		kill $$SWTPM_PID 2>/dev/null; wait $$SWTPM_PID 2>/dev/null; \
+		exit $$QEMU_EXIT; \
 	' & QEMU_PID=$$!; \
 	trap "kill $$QEMU_PID 2>/dev/null; wait $$QEMU_PID 2>/dev/null; exit 130" INT TERM; \
 	wait $$QEMU_PID; echo $$? > Build/qemu-exit-code
@@ -118,6 +137,7 @@ endif
 		echo "RESULT: NO TEST OUTPUT FOUND (exit code $$EXIT_CODE)"; \
 		exit 1; \
 	fi
+
 
 # ------------------------------------------------------------
 # Clean build artifacts

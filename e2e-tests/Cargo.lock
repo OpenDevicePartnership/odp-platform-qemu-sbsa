@@ -157,6 +157,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "tpm"
+version = "0.1.0"
+dependencies = [
+ "ffa",
+ "log",
+ "test-support",
+ "uefi",
+ "uuid",
+]
+
+[[package]]
 name = "uart-logger"
 version = "0.1.0"
 dependencies = [
