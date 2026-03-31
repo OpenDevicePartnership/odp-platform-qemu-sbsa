@@ -16,7 +16,7 @@ include ../Common.mk
 # Build output paths
 TARGET_DIR := target/aarch64-unknown-uefi/release
 THERMAL_EFI := $(TARGET_DIR)/thermal.efi
-BIOS_BUILD_DIR := ../bios/patina-qemu/Build/QemuSbsaPkg/DEBUG_GCC5/FV
+BIOS_BUILD_DIR := ../$(BIOS_FV_DIR)
 SECURE_FLASH0 := $(BIOS_BUILD_DIR)/SECURE_FLASH0.fd
 QEMU_EFI := $(BIOS_BUILD_DIR)/QEMU_EFI.fd
 
@@ -85,16 +85,10 @@ endif
 		set -o pipefail; \
 		cd $(REPO_ROOT)/e2e-tests && \
 		timeout $(QEMU_TIMEOUT) \
-			qemu-system-aarch64 -semihosting -cpu max,sve=off,sme=off -smp 4 -machine sbsa-ref \
-				-global driver=cfi.pflash01,property=secure,value=on -m 4G \
+			qemu-system-aarch64 \
+				$(QEMU_COMMON_ARGS) \
 				-drive if=pflash,format=raw,unit=0,file=$(SECURE_FLASH0) \
 				-drive if=pflash,format=raw,unit=1,file=$(QEMU_EFI),readonly=on \
-				-net none \
-				-smbios type=0,vendor="Patina",version="v1.0.2",date="03/06/2026",uefi=on \
-				-smbios type=1,manufacturer="OpenDevicePartnership",product="QEMU SBSA",family="QEMU",version="10.0.0",serial="42-42-42-42",uuid=99fb60e2-181c-413a-a3cf-0a5fea8d87b0 \
-				-smbios type=3,manufacturer="OpenDevicePartnership",serial="42-42-42-42",asset="SBSA",sku="SBSA",version="" \
-				-device qemu-xhci,id=usb -device usb-mouse,id=input0,bus=usb.0,port=1 \
-				-device usb-kbd,id=input1,bus=usb.0,port=2 \
 				-drive file=fat:rw:$(VDRIVE_DIR),format=raw,media=disk \
 				$(SERIAL_FLAG) \
 				-display none \
