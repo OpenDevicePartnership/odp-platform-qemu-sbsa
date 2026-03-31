@@ -5,7 +5,10 @@ edition = "2021"
 
 [dependencies]
 ffa = { path = "../../ffa" }
-uart-logger = { path = "../../uart-logger" }
-uefi = { version = "0.34", features = ["panic_handler", "alloc", "global_allocator"] }
+test-support = { path = "../../test-support" }
+uefi = { version = "0.34", features = [
+    "panic_handler",
+    "alloc",
+    "global_allocator",
+] }
 log = { version = "0.4", default-features = false }
-uuid = { version = "1.0", default-features = false, features = ["v1"] }

@@ -136,7 +136,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "thermal"
+name = "test-support"
 version = "0.1.0"
 dependencies = [
  "ffa",
@@ -144,6 +144,16 @@ dependencies = [
  "uart-logger",
  "uefi",
  "uuid",
+]
+
+[[package]]
+name = "thermal"
+version = "0.1.0"
+dependencies = [
+ "ffa",
+ "log",
+ "test-support",
+ "uefi",
 ]
 
 [[package]]
