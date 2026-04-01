@@ -1,0 +1,49 @@
+# This workflow periodically updates git submodules to the latest commit on
+# their default branch and opens a pull request with the changes.
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+
+name: Update submodules
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # daily at 8am UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-submodules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Update submodules to latest main
+        run: git submodule foreach 'git fetch origin && git checkout origin/main'
+
+      - name: Check for changes
+        id: check
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Pull Request
+        if: steps.check.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: update submodules to latest main"
+          branch: auto/update-submodules
+          title: "chore: update submodules to latest main"
+          body: |
+            Automated submodule update to latest main.
+          delete-branch: true
