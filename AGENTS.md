@@ -50,6 +50,16 @@ temporarily point `.gitmodules` at that fork.
    git submodule sync
    ```
 
+   Also add a comment above the changed URL in `.gitmodules` as a
+   reminder that it must be restored before the PR can merge:
+
+   ```ini
+   [submodule "secure-services/odp-secure-services"]
+           path = secure-services/odp-secure-services
+           # TODO: restore to OpenDevicePartnership URL before merging
+           url = https://github.com/<username>/odp-secure-services.git
+   ```
+
 6. **Stage both the submodule ref and `.gitmodules`** change in the parent
    repo:
 
@@ -92,3 +102,10 @@ Once the submodule PR is merged into the upstream repo's default branch:
 - When amending submodule changes into earlier commits via interactive
   rebase, watch for conflicts in `.gitmodules` or `Cargo.toml` files that
   reference path dependencies within the submodule.
+
+### CI merge guard
+
+The `check-submodules.yml` workflow verifies that every URL in
+`.gitmodules` belongs to `https://github.com/OpenDevicePartnership/`. PRs
+that still point to a personal fork will show a failing check and cannot
+be merged until the URLs are restored to the official org.

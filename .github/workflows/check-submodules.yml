@@ -1,0 +1,46 @@
+# Verify that all submodule URLs in .gitmodules point to the official
+# OpenDevicePartnership org. This prevents merging a PR that still
+# references a personal fork (used during development).
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+
+name: Check submodule URLs
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  check-submodule-urls:
+    name: Submodule URL check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Verify submodule URLs
+        run: |
+          ALLOWED_ORG="https://github.com/OpenDevicePartnership/"
+          failed=0
+
+          while IFS= read -r url; do
+            if [ -z "$url" ]; then
+              continue
+            fi
+            if ! echo "$url" | grep -qi "^${ALLOWED_ORG}"; then
+              echo "::error::Submodule URL not in allowed org: $url (expected ${ALLOWED_ORG}*)"
+              failed=1
+            fi
+          done < <(git config --file .gitmodules --get-regexp '\.url$' | awk '{print $2}')
+
+          if [ "$failed" -eq 1 ]; then
+            echo ""
+            echo "One or more submodule URLs point to a fork instead of the official org."
+            echo "Update .gitmodules to use ${ALLOWED_ORG}<repo>.git before merging."
+            exit 1
+          fi
+
+          echo "All submodule URLs point to the official org."
