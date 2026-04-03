@@ -9,6 +9,7 @@
 
 #include "battery.asl"
 #include "thermal.asl"
+#include "rtc.asl"
 
 
 //
@@ -156,6 +157,62 @@ Device (ECT0) {
     // Arg0 - Instance ID
     // Arg1 - Variable UUID
     Return(\_SB.CIO1.GVAR(Arg0,Arg1))
+  }
+
+  /******************* Time/Alarm Test Methods **********************************/
+
+  // Get capabilities
+  Method (_GCP, 0, Serialized) {
+    Return(\_SB.RTC._GCP())
+  }
+
+  // Get Real Time
+  Method (_GRT, 0, Serialized) {
+    Return(\_SB.RTC._GRT())
+  }
+
+  // Set Real Time
+  // Arg0 - Buffer containing the timestamp to set the clock to
+  Method (_SRT, 1, Serialized) {
+    Return(\_SB.RTC._SRT(Arg0))
+  }
+
+  // Get Wake Settings
+  // Arg0 - Timer ID (AC or DC)
+  Method (_GWS, 1, Serialized) {
+    Return(\_SB.RTC._GWS(Arg0))
+  }
+
+  // Clear Wake Status
+  // Arg0 - Timer ID (AC or DC)
+  Method (_CWS, 1, Serialized) {
+    Return(\_SB.RTC._CWS(Arg0))
+  }
+
+  // Set Timer Value
+  // Arg0 - Timer ID (AC or DC)
+  // Arg1 - Timer Value
+  Method (_STV, 2, NotSerialized) {
+    Return(\_SB.RTC._STV(Arg0, Arg1))
+  }
+
+  // Get Timer Value
+  // Arg0 - Timer ID (AC or DC)
+  Method (_TIV, 1, Serialized) {
+    Return(\_SB.RTC._TIV(Arg0))
+  }
+
+  // Set expired timer wake policy
+  // Arg0 - Timer ID (AC or DC)
+  // Arg1 - Expired timer wake policy
+  Method (_STP, 2, NotSerialized) {
+    Return(\_SB.RTC._STP(Arg0, Arg1))
+  }
+
+  // Get expired timer wake policy
+  // Arg0 - Timer ID (AC or DC)
+  Method (_TIP, 1, Serialized) {
+    Return(\_SB.RTC._TIP(Arg0))
   }
 
 } // Device (ECT0)
