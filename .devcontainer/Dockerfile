@@ -58,6 +58,7 @@ RUN apt-get update && \
     g++ \
     gcc \
     gcc-aarch64-linux-gnu \
+    qemu-utils \
     && \
     rm -rf /var/lib/apt/lists/*
 

@@ -35,7 +35,8 @@ DefinitionBlock ("DsdtTable.aml", "DSDT",
   Scope (_SB) {
   
   #include "ffa.asl"
-  
+  #include "ec.asl"
+
     // UART PL011
     Device (COM0) {
       Name (_HID, "ARMH0011")
