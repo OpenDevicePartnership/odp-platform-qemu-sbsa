@@ -6,9 +6,12 @@
 CC ?= gcc
 CFLAGS := -O2 -Wall -Wextra -shared -fPIC -fvisibility=hidden
 
-libcoverage.so: coverage.c qemu-plugin.h
+BUILD_DIR := ../Build
+
+$(BUILD_DIR)/libcoverage.so: coverage.c qemu-plugin.h
+	mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ $<
 
 .PHONY: clean
 clean:
-	rm -f libcoverage.so
+	rm -f $(BUILD_DIR)/libcoverage.so

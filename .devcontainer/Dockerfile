@@ -142,7 +142,7 @@ COPY bios/patina-qemu/pip-requirements.txt /tmp/pip-requirements.txt
 RUN pip install --upgrade -r /tmp/pip-requirements.txt pip lcov_cobertura
 USER root
 
-COPY --from=ghcr.io/dymk/qemu-builder@sha256:47de2fff538a2d8c6572c8873d2d5e2ef941dc7cd8c354a44ad7e8993d231920  /usr/local/bin/qemu-system-aarch64 /usr/local/bin/qemu-system-aarch64
-COPY --from=ghcr.io/dymk/qemu-builder@sha256:47de2fff538a2d8c6572c8873d2d5e2ef941dc7cd8c354a44ad7e8993d231920  /usr/local/share/qemu/ /usr/local/share/qemu/
+COPY --from=ghcr.io/opendevicepartnership/odp-qemu-builder/qemu@sha256:e217ae2d3fb7c0e5752ed48c71182b69989a3d6f7c415d26001d5727a5518cc1  /usr/local/bin/qemu-system-aarch64 /usr/local/bin/qemu-system-aarch64
+COPY --from=ghcr.io/opendevicepartnership/odp-qemu-builder/qemu@sha256:e217ae2d3fb7c0e5752ed48c71182b69989a3d6f7c415d26001d5727a5518cc1  /usr/local/share/qemu/ /usr/local/share/qemu/
 
 USER vscode

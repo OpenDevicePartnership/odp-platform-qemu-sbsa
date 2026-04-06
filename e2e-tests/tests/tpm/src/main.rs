@@ -56,7 +56,7 @@ const MANAGE_LOCALITY_CLOSE: u64 = 0x1;
 // ---------------------------------------------------------------------------
 // Test-only opcode: write CRB register bits in the SP's internal CRB
 // ---------------------------------------------------------------------------
-const TPM2_FFA_TEST_WRITE_CRB: u64 = 0x2f00_0001;
+const TPM2_FFA_TEST_WRITE_CRB: u64 = 0xDE00_0001;
 
 // TestWriteCrb operations (placed in Arg1 / register x5)
 const TEST_CRB_SET_REQUEST_ACCESS: u64 = 0;

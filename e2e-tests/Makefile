@@ -48,7 +48,7 @@ SERIAL_REDIRECT :=
 endif
 
 # Coverage plugin
-COVERAGE_PLUGIN := coverage-plugin/libcoverage.so
+COVERAGE_PLUGIN := Build/libcoverage.so
 COVERAGE_LOG := Build/coverage.log
 SP_ELF := ../secure-services/platform/target/aarch64-unknown-none/coverage/qemu-ec-sp
 
@@ -87,7 +87,7 @@ $(VDRIVE_DIR): build $(TEST_EFIS) startup.nsh
 # ------------------------------------------------------------
 $(COVERAGE_PLUGIN): builder-image
 	$(call GROUP,Build coverage plugin)
-	make -C coverage-plugin
+	make -C coverage-plugin BUILD_DIR=../Build
 	$(call ENDGROUP)
 
 .PHONY: test

@@ -39,35 +39,16 @@ graph LR
 
 ## Directory Structure
 
-```
-e2e-tests/
-├── Cargo.toml              # Workspace root
-├── .cargo/config.toml      # Default target: aarch64-unknown-uefi
-├── Makefile                 # Build, run, and test targets
-├── ffa/                     # FFA calling library (thin wrapper around odp-ffa)
-│   ├── Cargo.toml
-│   └── src/
-│       ├── lib.rs           # Re-exports odp_ffa::*
-│       ├── partition_info.rs# FFA_PARTITION_INFO_GET_REGS (TODO: upstream to odp-ffa)
-│       └── smc.rs           # FF-A raw SMC wrapper
-├── test-support/            # Shared test harness and helpers
-│   ├── Cargo.toml
-│   └── src/
-│       └── lib.rs           # run_tests(), TestResults, send_direct_req2(), etc.
-├── uart-logger/             # Minimal UART logging crate for PL011
-│   ├── Cargo.toml
-│   └── src/
-│       └── lib.rs
-└── tests/
-    ├── thermal/             # Thermal service test suite
-    │   ├── Cargo.toml
-    │   └── src/
-    │       └── main.rs
-    └── tpm/                 # TPM service test suite
-        ├── Cargo.toml
-        └── src/
-            └── main.rs
-```
+| Directory | Purpose |
+| --- | --- |
+| `ffa/` | FFA calling library — thin wrapper around `odp-ffa` with `FFA_PARTITION_INFO_GET_REGS` |
+| `test-support/` | Shared test harness: `run_tests()`, `send_direct_req2()`, result reporting |
+| `uart-logger/` | Minimal PL011 UART logging crate for serial output |
+| `tests/thermal/` | Thermal service test suite (`thermal.efi`) |
+| `tests/tpm/` | TPM service test suite (`tpm.efi`) |
+| `coverage-plugin/` | QEMU TCG plugin for SP code coverage collection |
+| `scripts/` | Post-processing tools (e.g., `pcs-to-lcov.py`) |
+| `Build/` | Build artifacts: test output, coverage logs/reports, virtual drive |
 
 ## How It Works
 
@@ -280,10 +261,11 @@ e2e-tests/
 ├── coverage-plugin/
 │   ├── coverage.c          # QEMU TCG plugin source
 │   ├── qemu-plugin.h       # Vendored minimal plugin API header
-│   └── Makefile             # Builds libcoverage.so
+│   └── Makefile             # Builds Build/libcoverage.so
 ├── scripts/
 │   └── pcs-to-lcov.py      # PC-to-lcov conversion script
 └── Build/
+    ├── libcoverage.so       # Compiled coverage plugin
     ├── coverage.log         # Raw PCs (one hex address per line)
     ├── coverage.info        # lcov tracefile
     └── coverage-html/       # HTML report (genhtml output)

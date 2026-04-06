@@ -1,7 +1,7 @@
 [submodule "patina-qemu"]
 	path = bios/patina-qemu
 	url = https://github.com/OpenDevicePartnership/patina-qemu.git
-[submodule "secure-services/odp-secure-services"]
+[submodule "odp-secure-services"]
 	path = secure-services/odp-secure-services
 # TODO: restore to OpenDevicePartnership URL before merging
 	url = https://github.com/dymk/odp-secure-services.git
