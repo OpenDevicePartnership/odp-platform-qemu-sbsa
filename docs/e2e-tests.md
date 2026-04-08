@@ -243,15 +243,15 @@ and coverage builds.
 ### Commands
 
 ```bash
-# Run tests (coverage is collected automatically)
-make -C e2e-tests test
+# Run tests with coverage (builds secure-services with coverage profile)
+make e2e-test
 
 # Generate HTML coverage report
 make -C e2e-tests coverage-report
 # Output: e2e-tests/Build/coverage-html/index.html
 
 # Build only the coverage plugin
-make -C e2e-tests coverage-plugin/libcoverage.so
+make -C e2e-tests Build/libcoverage.so
 ```
 
 ### Directory structure

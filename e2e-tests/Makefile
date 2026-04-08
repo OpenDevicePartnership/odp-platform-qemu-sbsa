@@ -87,7 +87,10 @@ $(VDRIVE_DIR): build $(TEST_EFIS) startup.nsh
 # ------------------------------------------------------------
 $(COVERAGE_PLUGIN): builder-image
 	$(call GROUP,Build coverage plugin)
-	make -C coverage-plugin BUILD_DIR=../Build
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/e2e-tests && \
+		make -C coverage-plugin BUILD_DIR=../Build \
+	"
 	$(call ENDGROUP)
 
 .PHONY: test
