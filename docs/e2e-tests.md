@@ -14,11 +14,11 @@ reports results over serial.
 graph LR
     subgraph QEMU["QEMU (sbsa-ref machine)"]
         subgraph NS["Non-Secure World"]
-            Shell["UEFI Shell<br/>thermal.efi"]
+            Shell["UEFI Shell<br/>thermal.efi / tpm.efi"]
         end
         subgraph S["Secure World"]
             SPMC["Hafnium (SPMC)"]
-            SP["EC SP (0x8002)<br/>Thermal / FwMgmt / Notify"]
+            SP["EC SP (0x8002)<br/>Thermal / TPM / FwMgmt / Notify"]
         end
         Shell -- "FFA_MSG_SEND_DIRECT_REQ2<br/>(SMC #0)" --> SPMC
         SPMC --> SP
@@ -39,27 +39,16 @@ graph LR
 
 ## Directory Structure
 
-```
-e2e-tests/
-├── Cargo.toml              # Workspace root
-├── .cargo/config.toml      # Default target: aarch64-unknown-uefi
-├── Makefile                 # Build, run, and test targets
-├── ffa/                     # FFA calling library (thin wrapper around odp-ffa)
-│   ├── Cargo.toml
-│   └── src/
-│       ├── lib.rs           # Re-exports odp_ffa::*
-│       ├── partition_info.rs# FFA_PARTITION_INFO_GET_REGS (TODO: upstream to odp-ffa)
-│       └── smc.rs           # FF-A raw SMC wrapper
-├── uart-logger/             # Minimal UART logging crate for PL011
-│   ├── Cargo.toml
-│   └── src/
-│       └── lib.rs
-└── tests/
-    └── thermal/             # Thermal service test suite
-        ├── Cargo.toml
-        └── src/
-            └── main.rs      # UEFI entry point → FFA calls → assert → shutdown
-```
+| Directory | Purpose |
+| --- | --- |
+| `ffa/` | FFA calling library — thin wrapper around `odp-ffa` with `FFA_PARTITION_INFO_GET_REGS` |
+| `test-support/` | Shared test harness: `run_tests()`, `send_direct_req2()`, result reporting |
+| `uart-logger/` | Minimal PL011 UART logging crate for serial output |
+| `tests/thermal/` | Thermal service test suite (`thermal.efi`) |
+| `tests/tpm/` | TPM service test suite (`tpm.efi`) |
+| `coverage-plugin/` | QEMU TCG plugin for SP code coverage collection |
+| `scripts/` | Post-processing tools (e.g., `pcs-to-lcov.py`) |
+| `Build/` | Build artifacts: test output, coverage logs/reports, virtual drive |
 
 ## How It Works
 
@@ -197,7 +186,7 @@ Add a new `fn test_*()` function in the relevant test binary (e.g.,
 1. Create `e2e-tests/tests/<service>/Cargo.toml` and `src/main.rs`.
 2. Add it to the workspace in `e2e-tests/Cargo.toml`:
    ```toml
-   members = ["ffa", "tests/thermal", "tests/<service>"]
+   members = ["ffa", "uart-logger", "test-support", "tests/thermal", "tests/<service>"]
    ```
 3. Update `e2e-tests/Makefile`:
    - Add the new `.efi` path to `TEST_EFIS`.
@@ -215,6 +204,69 @@ The EC Secure Partition (0x8002) handles these services:
 | EC Power | `7157addf-2fbe-4c63-ae95-efac16e3b01c` |
 | EC Battery | `25cb5207-ac36-427d-aaef-3aa78877d27e` |
 | EC Thermal | `31f56da7-593c-4d72-a4b3-8fc7171ac073` |
+| TPM 2.0 | `17b862a4-1806-4faf-86b3-089a58353861` |
 
 These are defined in the SP's device tree manifest
 (`secure-services/platform/linker/qemu-ec-sp.dts`).
+
+## Code Coverage
+
+E2E tests automatically collect code coverage for the EC Secure Partition
+using a QEMU TCG plugin. Every `make test` run produces a coverage log at
+`Build/coverage.log`.
+
+### How it works
+
+1. **TCG plugin** (`coverage-plugin/coverage.c`) — a small shared library
+   loaded into QEMU via `-plugin`. During translation, it instruments every
+   instruction whose address falls within the SP memory range
+   (`0x20802000`–`0x21002000`, matching the linker script). On execution, it
+   sets a bit in a lock-free bitmap. At exit, it writes all unique executed PCs
+   to the output file.
+
+2. **Post-processing** (`scripts/pcs-to-lcov.py`) — extracts all instruction
+   addresses from the SP ELF via `llvm-objdump`, resolves every address to a
+   source file and line via `llvm-addr2line`, then overlays the executed PCs to
+   produce an lcov tracefile. Lines that exist but weren't executed appear as
+   `DA:line,0`, giving accurate coverage percentages.
+
+3. **HTML report** — `genhtml` converts the lcov tracefile into a browsable
+   HTML report.
+
+### Prerequisites
+
+The SP ELF must be built with debug info so `llvm-addr2line` can resolve
+addresses. This is configured via `debug = true` in the `[profile.coverage]`
+section of `secure-services/platform/Cargo.toml`, which is used for e2e test
+and coverage builds.
+
+### Commands
+
+```bash
+# Run tests with coverage (builds secure-services with coverage profile)
+make e2e-test
+
+# Generate HTML coverage report
+make -C e2e-tests coverage-report
+# Output: e2e-tests/Build/coverage-html/index.html
+
+# Build only the coverage plugin
+make -C e2e-tests Build/libcoverage.so
+```
+
+### Directory structure
+
+```
+e2e-tests/
+├── coverage-plugin/
+│   ├── coverage.c          # QEMU TCG plugin source
+│   ├── qemu-plugin.h       # Vendored minimal plugin API header
+│   └── Makefile             # Builds Build/libcoverage.so
+├── scripts/
+│   └── pcs-to-lcov.py      # PC-to-lcov conversion script
+└── Build/
+    ├── libcoverage.so       # Compiled coverage plugin
+    ├── coverage.log         # Raw PCs (one hex address per line)
+    ├── coverage.info        # lcov tracefile
+    └── coverage-html/       # HTML report (genhtml output)
+```

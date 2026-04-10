@@ -18,6 +18,9 @@ To run end-to-end tests against the secure partition: `make e2e-test`
 (builds everything first, then launches QEMU and runs the test suite).
 See [docs/e2e-tests.md](docs/e2e-tests.md) for details.
 
+After tests run, a code coverage report for the secure partition is generated
+with `make -C e2e-tests coverage-report` (outputs to `e2e-tests/Build/coverage-html/`).
+
 Each sub folder has its own Makefile script to build each subcomponent.
 
 ## Folder Structure and Content

@@ -74,7 +74,6 @@ dependencies = [
 [[package]]
 name = "odp-ffa"
 version = "0.1.0"
-source = "git+https://github.com/OpenDevicePartnership/odp-secure-services#79e24eca20cfe0d32b491fd4d0562bc87aa358ca"
 dependencies = [
  "log",
  "num_enum",
@@ -137,12 +136,33 @@ dependencies = [
 ]
 
 [[package]]
-name = "thermal"
+name = "test-support"
 version = "0.1.0"
 dependencies = [
  "ffa",
  "log",
  "uart-logger",
+ "uefi",
+ "uuid",
+]
+
+[[package]]
+name = "thermal"
+version = "0.1.0"
+dependencies = [
+ "ffa",
+ "log",
+ "test-support",
+ "uefi",
+]
+
+[[package]]
+name = "tpm"
+version = "0.1.0"
+dependencies = [
+ "ffa",
+ "log",
+ "test-support",
  "uefi",
  "uuid",
 ]

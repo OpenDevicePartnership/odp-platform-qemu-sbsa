@@ -12,6 +12,11 @@ EC_SECURE_DTS := platform/linker/qemu-ec-sp.dts
 
 include ../Common.mk
 
+# Optional cargo features (e.g. test-bypass-locality-check for e2e tests)
+CARGO_FEATURES ?=
+# Cargo profile to build with (release or coverage)
+CARGO_PROFILE ?= release
+
 all: $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
 
 # ------------------------------------------------------------
@@ -23,7 +28,7 @@ $(QEMU_RUST_BIN): $(QEMU_RUST_DTS) builder-image
 		cd $(REPO_ROOT)/secure-services && \
 		mkdir -p Build && \
 		cd platform && \
-		cargo objcopy --target=aarch64-unknown-none --release -- -O binary ../$(QEMU_RUST_BIN) \
+		cargo objcopy --target=aarch64-unknown-none --profile $(CARGO_PROFILE) $(if $(CARGO_FEATURES),--features=$(CARGO_FEATURES),) -- -O binary ../$(QEMU_RUST_BIN) \
 	"
 	$(call ENDGROUP)
 
