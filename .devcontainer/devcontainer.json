@@ -14,6 +14,9 @@
     5008,
     5900 // VNC
   ],
+  "runArgs": [
+    "--device=/dev/ttyACM0:/dev/ttyACM0"
+  ],
   "mounts": [],
   "containerEnv": {
     "SCCACHE_DIR": "${containerWorkspaceFolder}/.sccache"

@@ -1,5 +1,7 @@
 mod interrupt;
 mod panic;
+pub mod services;
+pub mod uart;
 
 use aarch64_rt::entry;
 use ec_service_lib::SpLogger;
