@@ -3,5 +3,4 @@
 	url = https://github.com/OpenDevicePartnership/patina-qemu.git
 [submodule "odp-secure-services"]
 	path = secure-services/odp-secure-services
-# TODO: restore to OpenDevicePartnership URL before merging
-	url = https://github.com/dymk/odp-secure-services.git
+	url = https://github.com/OpenDevicePartnership/odp-secure-services.git

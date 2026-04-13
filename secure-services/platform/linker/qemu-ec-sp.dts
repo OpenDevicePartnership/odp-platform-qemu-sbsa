@@ -101,6 +101,14 @@
 			pages-count = <0x10>;
 			attributes = <0x3>;
 		};
+
+		/* EC uart */
+		ec_uart {
+			description = "ec uart";
+			base-address = <0x0 0x60030000>;
+			pages-count = <0x1>;
+			attributes = <0x3>;
+		};
 	};
 
 };
