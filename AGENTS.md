@@ -6,8 +6,8 @@ This repo uses git submodules (see `.gitmodules`). CI checks out submodules
 recursively, so any commit referenced by a submodule must be publicly
 accessible on GitHub. The upstream org repos
 (`OpenDevicePartnership/<repo>`) only allow merges via PR, so during
-development you must push submodule branches to a **private fork** and
-temporarily point `.gitmodules` at that fork.
+development you must push submodule branches to a **public fork** (or other
+fork accessible to CI) and temporarily point `.gitmodules` at that fork.
 
 ### Making changes in a submodule
 

@@ -30,7 +30,7 @@ jobs:
             if [ -z "$url" ]; then
               continue
             fi
-            if ! echo "$url" | grep -qi "^${ALLOWED_ORG}"; then
+            if [[ "$url" != "${ALLOWED_ORG}"* ]]; then
               echo "::error::Submodule URL not in allowed org: $url (expected ${ALLOWED_ORG}*)"
               failed=1
             fi
