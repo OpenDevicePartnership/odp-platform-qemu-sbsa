@@ -52,6 +52,6 @@ run: builder-image
 
 clean:
 	@echo "=== Cleaning BIOS build artifacts ==="
-	cd $(REPO_ROOT_IN_HOST)/bios/patina-qemu && rm -rf Build
+	cd $(REPO_ROOT_IN_HOST)/bios/patina-qemu && rm -rf Build Conf
 
 .PHONY : all builder-image builder-shell patina-qemu patina-qemu-ec run clean

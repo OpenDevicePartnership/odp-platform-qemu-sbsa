@@ -58,6 +58,9 @@ RUN apt-get update && \
     g++ \
     gcc \
     gcc-aarch64-linux-gnu \
+    qemu-utils \
+    swtpm \
+    swtpm-tools \
     && \
     rm -rf /var/lib/apt/lists/*
 
@@ -139,7 +142,7 @@ COPY bios/patina-qemu/pip-requirements.txt /tmp/pip-requirements.txt
 RUN pip install --upgrade -r /tmp/pip-requirements.txt pip lcov_cobertura
 USER root
 
-COPY --from=ghcr.io/dymk/qemu-builder@sha256:f82a910a1a747ede233f393af234ea678b539b3273077bbc370db604183f7a8e  /usr/local/bin/qemu-system-aarch64 /usr/local/bin/qemu-system-aarch64
-COPY --from=ghcr.io/dymk/qemu-builder@sha256:f82a910a1a747ede233f393af234ea678b539b3273077bbc370db604183f7a8e  /usr/local/share/qemu/ /usr/local/share/qemu/
+COPY --from=ghcr.io/opendevicepartnership/odp-qemu-builder/qemu@sha256:2ce244b7b6f49e598c53021dd701a99e8b1bdf6537a3c4bf02a7e6cb3923304d /usr/local/bin/qemu-system-aarch64 /usr/local/bin/qemu-system-aarch64
+COPY --from=ghcr.io/opendevicepartnership/odp-qemu-builder/qemu@sha256:2ce244b7b6f49e598c53021dd701a99e8b1bdf6537a3c4bf02a7e6cb3923304d /usr/local/share/qemu/ /usr/local/share/qemu/
 
 USER vscode

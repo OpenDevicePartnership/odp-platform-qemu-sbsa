@@ -4,7 +4,7 @@ Device(\_SB_.FFA0) {
   
   OperationRegion(AFFH, FFixedHw, 2, 144) 
   Field(AFFH, BufferAcc, NoLock, Preserve) { AccessAs(BufferAcc, 0x1), FFAC, 1152 }     
-   
+  
   Name(_DSD, Package() {
     ToUUID("c08c3233-b316-4723-a9d7-e21b7ac0fb6a"), //Device Prop UUID
     Package() {
@@ -16,7 +16,7 @@ Device(\_SB_.FFA0) {
           Package () {
             ToUUID("330c1273-fde5-4757-9819-5b6539037502"), // UUID
             Package () {
-              0x01,     //ac insertion
+              0x01,     // Cookie1
             }
           },
         }
@@ -60,6 +60,7 @@ Device(\_SB_.FFA0) {
         // Store(DeRefOf(Index(Arg3,1)), \_SB.ECT0.NEVT )
         Return(Zero) 
       }
+      Return(Buffer(One) { 0x00 })
     } Else {
       Return(Buffer(One) { 0x00 })
     }

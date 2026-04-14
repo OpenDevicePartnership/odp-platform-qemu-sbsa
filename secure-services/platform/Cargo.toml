@@ -11,6 +11,7 @@ categories = ["embedded", "no-std"]
 
 [features]
 default = []
+test-bypass-locality-check = ["ec-service-lib/test-bypass-locality-check"]
 
 [dependencies]
 aarch64-cpu = "10.0.0"
@@ -19,12 +20,18 @@ aarch64-rt = { version = "0.2.2", default-features = false, features = [
     "el1",
     "exceptions",
 ] }
-aarch64-haf = { git = "https://github.com/OpenDevicePartnership/odp-secure-services" }
-ec-service-lib = { git = "https://github.com/OpenDevicePartnership/odp-secure-services" }
-hafnium = { git = "https://github.com/OpenDevicePartnership/odp-secure-services" }
-odp-ffa = { git = "https://github.com/OpenDevicePartnership/odp-secure-services" }
+aarch64-haf = { path = "../odp-secure-services/aarch64-haf" }
+ec-service-lib = { path = "../odp-secure-services/ec-service-lib" }
+hafnium = { path = "../odp-secure-services/hafnium" }
+odp-ffa = { path = "../odp-secure-services/odp-ffa" }
 log = { version = "0.4", default-features = false }
 uuid = { version = "1.0", default-features = false, features = ["v1"] }
 
 [build-dependencies]
 chrono = "0.4"
+
+[profile.release]
+
+[profile.coverage]
+inherits = "release"
+debug = true
