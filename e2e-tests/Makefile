@@ -163,6 +163,12 @@ endif
 # ------------------------------------------------------------
 .PHONY: coverage-report
 coverage-report:
+	$(call GROUP,Validate SP ELF address window)
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/e2e-tests && \
+		bash scripts/validate-address-window.sh $(SP_ELF) \
+	"
+	$(call ENDGROUP)
 	$(call GROUP,Generate coverage report)
 	$(DOCKER_COMMAND_PREFIX) bash -lc " \
 		cd $(REPO_ROOT)/e2e-tests && \
@@ -176,6 +182,12 @@ coverage-report:
 			--ignore-errors source \
 			--output-directory Build/coverage-html \
 			--title 'EC Secure Partition Coverage' \
+	"
+	$(call ENDGROUP)
+	$(call GROUP,Check E2E coverage threshold)
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/e2e-tests && \
+		bash scripts/check-coverage-threshold.sh Build/coverage.info 50 \
 	"
 	$(call ENDGROUP)
 
