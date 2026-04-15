@@ -12,3 +12,4 @@ uefi = { version = "0.34", features = [
     "global_allocator",
 ] }
 log = { version = "0.4", default-features = false }
+uuid = { version = "1.0", default-features = false }

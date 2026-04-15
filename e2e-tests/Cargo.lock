@@ -185,6 +185,7 @@ dependencies = [
  "log",
  "test-support",
  "uefi",
+ "uuid",
 ]
 
 [[package]]
