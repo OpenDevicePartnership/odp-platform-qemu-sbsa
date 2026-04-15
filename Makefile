@@ -54,6 +54,12 @@ e2e-test: secure-services-test
 	$(MAKE) -C e2e-tests test
 
 # ------------------------------------------------------------
+# Run host unit test coverage
+# ------------------------------------------------------------
+host-coverage:
+	$(MAKE) -C secure-services host-coverage
+
+# ------------------------------------------------------------
 # Clean everything
 # ------------------------------------------------------------
 clean:
@@ -61,4 +67,4 @@ clean:
 	$(MAKE) -C bios clean
 	$(MAKE) -C e2e-tests clean
 
-.PHONY: all secure-services secure-services-test bios run run-in-devcontainer e2e-test clean
+.PHONY: all secure-services secure-services-test bios run run-in-devcontainer e2e-test host-coverage clean
