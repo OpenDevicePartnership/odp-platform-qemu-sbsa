@@ -13,9 +13,9 @@ THRESHOLD="${2:?Usage: check-coverage-threshold.sh <coverage.info> <threshold_pe
 
 # Extract line coverage percentage from lcov --summary output
 SUMMARY=$(lcov --summary "$COVERAGE_INFO" 2>&1)
-COVERAGE=$(echo "$SUMMARY" | grep 'lines' | sed 's/.*: *\([0-9.]*\)%.*/\1/')
+COVERAGE=$(echo "$SUMMARY" | grep -E '^\s*lines' | sed 's/.*: *\([0-9.]*\)%.*/\1/')
 
-if [ -z "$COVERAGE" ]; then
+if [ -z "$COVERAGE" ] || ! echo "$COVERAGE" | grep -qE '^[0-9]+(\.[0-9]+)?$'; then
     echo "ERROR: Could not parse line coverage from lcov summary"
     echo "$SUMMARY"
     exit 1
@@ -24,7 +24,7 @@ fi
 echo "Line coverage: ${COVERAGE}%  (threshold: ${THRESHOLD}%)"
 
 # Floating-point comparison via awk (handles decimals like 55.3)
-if awk "BEGIN{exit($COVERAGE >= $THRESHOLD ? 0 : 1)}"; then
+if awk -v cov="$COVERAGE" -v thr="$THRESHOLD" 'BEGIN{exit(cov >= thr ? 0 : 1)}'; then
     echo "OK: E2E line coverage meets threshold"
 else
     echo "FAIL: E2E line coverage ${COVERAGE}% is below ${THRESHOLD}% threshold"
