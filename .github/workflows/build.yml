@@ -136,6 +136,16 @@ jobs:
             GIT_COMMITTER_NAME=vscode
             GIT_COMMITTER_EMAIL=vscode@example.com
           runCmd: |
+            set -e
             make all
             make e2e-test QEMU_TIMEOUT=900
-            sccache --show-stats
+            make host-coverage
+            sccache --show-stats || true
+
+      - name: Upload host coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: host-coverage-report
+          path: secure-services/Build/host-coverage-html/
+          if-no-files-found: ignore
