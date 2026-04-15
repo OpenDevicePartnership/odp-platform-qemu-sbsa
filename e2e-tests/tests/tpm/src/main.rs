@@ -190,7 +190,7 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         0,
         TPM2_FFA_DENIED,
     );
-    // RegisterForNotification → NOT_SUP.
+    // RegisterForNotification → OK (registers for notifications).
     expect_status(
         results,
         "tpm_register_for_notification",
@@ -199,9 +199,9 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         TPM2_FFA_REGISTER_FOR_NOTIFICATION,
         0,
         0,
-        TPM2_FFA_NOT_SUP,
+        TPM2_FFA_SUCCESS_OK,
     );
-    // UnregisterForNotification → NOT_SUP.
+    // UnregisterForNotification → OK (was registered).
     expect_status(
         results,
         "tpm_unregister_for_notification",
@@ -210,9 +210,9 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         TPM2_FFA_UNREGISTER_FOR_NOTIFICATION,
         0,
         0,
-        TPM2_FFA_NOT_SUP,
+        TPM2_FFA_SUCCESS_OK,
     );
-    // FinishNotified → NOT_SUP.
+    // FinishNotified → DENIED (already unregistered).
     expect_status(
         results,
         "tpm_finish_notified",
@@ -221,7 +221,7 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         TPM2_FFA_FINISH_NOTIFIED,
         0,
         0,
-        TPM2_FFA_NOT_SUP,
+        TPM2_FFA_DENIED,
     );
 
     // ManageLocality tests (SP built with test-bypass-locality-check)

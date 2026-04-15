@@ -9,6 +9,9 @@
 #[cfg(target_os = "none")]
 mod baremetal;
 
+#[cfg(any(target_os = "none", test))]
+mod battery;
+
 #[cfg(not(target_os = "none"))]
 fn main() {
     println!("qemu-sp stub");
@@ -42,6 +45,7 @@ fn main() -> ! {
         .append(ec_service_lib::services::Thermal::new())
         .append(ec_service_lib::services::FwMgmt::new())
         .append(ec_service_lib::services::Notify::new())
+        .append(battery::Battery::new())
         .append(tpm)
         .run_message_loop()
         .expect("Error in run_message_loop");
