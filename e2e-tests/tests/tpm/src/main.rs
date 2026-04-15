@@ -63,8 +63,8 @@ const TEST_CRB_SET_REQUEST_ACCESS: u64 = 0;
 const TEST_CRB_SET_RELINQUISH: u64 = 1;
 const TEST_CRB_SET_CMD_READY: u64 = 2;
 const TEST_CRB_SET_GO_IDLE: u64 = 3;
-#[allow(dead_code)]
 const TEST_CRB_SET_START: u64 = 4;
+const TEST_CRB_PREPARE_STARTUP_CMD: u64 = 5;
 
 /// Build a TPM request payload from (opcode, function, locality).
 ///
@@ -379,8 +379,11 @@ fn test_write_crb(
 ///
 ///   1. Set REQUEST_ACCESS → Start(LOCALITY) → sst.locality_request → active=0
 ///   2. Set CMD_READY → Start(COMMAND) → handle_command IDLE→READY (sst.cmd_ready)
-///   3. Set GO_IDLE → Start(COMMAND) → handle_command READY→IDLE (sst.go_idle)
-///   4. Set RELINQUISH → Start(LOCALITY) → sst.locality_relinquish → active=NONE
+///   3. Set START → Start(COMMAND) → handle_command sst.start() READY→COMPLETE
+///   4. Set GO_IDLE → Start(COMMAND) → handle_command COMPLETE→IDLE (sst.go_idle)
+///   5. Re-enter READY (setup for step 6)
+///   6. Set GO_IDLE → Start(COMMAND) → handle_command READY→IDLE (sst.go_idle)
+///   7. Set RELINQUISH → Start(LOCALITY) → sst.locality_relinquish → active=NONE
 fn test_crb_state_machine(results: &mut TestResults, our_id: u16, ec_id: u16) {
     // -- Step 1: Request locality 0 via sst.locality_request ---------------
     if !test_write_crb(
@@ -431,7 +434,84 @@ fn test_crb_state_machine(results: &mut TestResults, our_id: u16, ec_id: u16) {
     }
     results.pass("tpm_crb_idle_to_ready");
 
-    // -- Step 3: READY → IDLE via sst.go_idle ------------------------------
+    // -- Step 3: READY → COMPLETE via sst.start() (command execution) ------
+    // First prepare a valid TPM2_Startup command in the CRB data buffer,
+    // then set the start bit. handle_command calls sst.start() which does
+    // copy_command_data + start_command + copy_response_data through the
+    // emulated TPM CRB interface.
+    if !test_write_crb(
+        results,
+        "tpm_crb_sm",
+        our_id,
+        ec_id,
+        TEST_CRB_PREPARE_STARTUP_CMD,
+        0,
+    ) {
+        return;
+    }
+    if !test_write_crb(results, "tpm_crb_sm", our_id, ec_id, TEST_CRB_SET_START, 0) {
+        return;
+    }
+    let payload = tpm_request(TPM2_FFA_START, START_QUALIFIER_COMMAND, 0);
+    let (status, _) = match tpm_send(results, "tpm_crb_start_command", our_id, ec_id, &payload) {
+        Some(v) => v,
+        None => return,
+    };
+    log::info!("  crb_start_command: status={:#x}", status);
+    if status != TPM2_FFA_SUCCESS_OK {
+        results.fail(
+            "tpm_crb_start_command",
+            "expected OK from command execution",
+        );
+        return;
+    }
+    results.pass("tpm_crb_start_command");
+
+    // -- Step 4: COMPLETE → IDLE via sst.go_idle ---------------------------
+    if !test_write_crb(
+        results,
+        "tpm_crb_sm",
+        our_id,
+        ec_id,
+        TEST_CRB_SET_GO_IDLE,
+        0,
+    ) {
+        return;
+    }
+    let payload = tpm_request(TPM2_FFA_START, START_QUALIFIER_COMMAND, 0);
+    let (status, _) = match tpm_send(results, "tpm_crb_complete_to_idle", our_id, ec_id, &payload) {
+        Some(v) => v,
+        None => return,
+    };
+    log::info!("  crb_complete_to_idle: status={:#x}", status);
+    if status != TPM2_FFA_SUCCESS_OK {
+        results.fail("tpm_crb_complete_to_idle", "expected OK for COMPLETE→IDLE");
+        return;
+    }
+    results.pass("tpm_crb_complete_to_idle");
+
+    // -- Step 5: Re-enter READY for the READY→IDLE test below --------------
+    if !test_write_crb(
+        results,
+        "tpm_crb_sm",
+        our_id,
+        ec_id,
+        TEST_CRB_SET_CMD_READY,
+        0,
+    ) {
+        return;
+    }
+    let payload = tpm_request(TPM2_FFA_START, START_QUALIFIER_COMMAND, 0);
+    let (status, _) = match tpm_send(results, "tpm_crb_idle_to_ready", our_id, ec_id, &payload) {
+        Some(v) => v,
+        None => return,
+    };
+    if status != TPM2_FFA_SUCCESS_OK {
+        results.fail("tpm_crb_idle_to_ready", "expected OK for second IDLE→READY");
+        return;
+    }
+
+    // -- Step 6: READY → IDLE via sst.go_idle ------------------------------
     if !test_write_crb(
         results,
         "tpm_crb_sm",
@@ -454,7 +534,7 @@ fn test_crb_state_machine(results: &mut TestResults, our_id: u16, ec_id: u16) {
     }
     results.pass("tpm_crb_ready_to_idle");
 
-    // -- Step 4: Relinquish locality 0 via sst.locality_relinquish ---------
+    // -- Step 7: Relinquish locality 0 via sst.locality_relinquish ---------
     if !test_write_crb(
         results,
         "tpm_crb_sm",
