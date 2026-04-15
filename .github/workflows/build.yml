@@ -138,4 +138,13 @@ jobs:
           runCmd: |
             make all
             make e2e-test QEMU_TIMEOUT=900
-            sccache --show-stats
+            make -C e2e-tests coverage-report
+            sccache --show-stats || true
+
+      - name: Upload E2E coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-coverage-report
+          path: e2e-tests/Build/coverage-html/
+          if-no-files-found: ignore
