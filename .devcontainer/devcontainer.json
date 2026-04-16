@@ -22,7 +22,9 @@
     "vscode": {
       "extensions": [
         "rust-lang.rust-analyzer",
-        "bierner.markdown-mermaid"
+        "bierner.markdown-mermaid",
+        "ms-vscode.makefile-tools",
+        "tamasfe.even-better-toml"
       ]
     }
   }
