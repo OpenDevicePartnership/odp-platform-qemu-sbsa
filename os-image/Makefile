@@ -51,7 +51,7 @@ run: $(OS_IMAGE_OUTPUT) $(BIOS_OUTPUTS)
 		-drive if=pflash,format=raw,unit=0,file=$(BIOS_FLASH0) \
 		-drive if=pflash,format=raw,unit=1,file=$(BIOS_EFI),readonly=on \
 		-serial stdio \
-		-serial /dev/ttyACM0 \
+		-serial /dev/ttyQEMU0 \
 		-display vnc=:1 \
 		-hda build/winvos.qcow2
 
@@ -65,7 +65,7 @@ run_debug: qcow2 $(BIOS_OUTPUTS)
 		-drive if=pflash,format=raw,unit=1,file=$(BIOS_EFI),readonly=on \
 		-gdb tcp:127.0.0.1:5555,server,nowait \
 		-serial tcp:127.0.0.1:5800,server,nowait \
-		-serial /dev/ttyACM0 \
+		-serial /dev/ttyQEMU0 \
 		-display vnc=:1 \
 		-hda build/winvos.qcow2
 

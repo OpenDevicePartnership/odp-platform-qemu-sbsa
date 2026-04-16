@@ -15,7 +15,7 @@
     5900 // VNC
   ],
   "runArgs": [
-    "--device=/dev/ttyACM0:/dev/ttyACM0"
+    "--device=/dev/ttyACM0:/dev/ttyQEMU0"
   ],
   "mounts": [],
   "containerEnv": {
