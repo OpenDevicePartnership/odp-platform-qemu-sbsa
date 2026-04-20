@@ -17,6 +17,9 @@ include ../Common.mk
 TARGET_DIR := target/aarch64-unknown-uefi/release
 THERMAL_EFI := $(TARGET_DIR)/thermal.efi
 TPM_EFI := $(TARGET_DIR)/tpm.efi
+BATTERY_EFI := $(TARGET_DIR)/battery.efi
+FWMGMT_EFI := $(TARGET_DIR)/fwmgmt.efi
+NOTIFY_EFI := $(TARGET_DIR)/notify.efi
 BIOS_BUILD_DIR := ../$(BIOS_FV_DIR)
 SECURE_FLASH0 := $(BIOS_BUILD_DIR)/SECURE_FLASH0.fd
 QEMU_EFI := $(BIOS_BUILD_DIR)/QEMU_EFI.fd
@@ -53,7 +56,7 @@ COVERAGE_LOG := Build/coverage.log
 SP_ELF := ../secure-services/platform/target/aarch64-unknown-none/coverage/qemu-ec-sp
 
 # All test EFI binaries
-TEST_EFIS := $(THERMAL_EFI) $(TPM_EFI)
+TEST_EFIS := $(THERMAL_EFI) $(TPM_EFI) $(BATTERY_EFI) $(FWMGMT_EFI) $(NOTIFY_EFI)
 
 # ------------------------------------------------------------
 # Build all test EFI binaries
@@ -160,6 +163,12 @@ endif
 # ------------------------------------------------------------
 .PHONY: coverage-report
 coverage-report:
+	$(call GROUP,Validate SP ELF address window)
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/e2e-tests && \
+		bash scripts/validate-address-window.sh $(SP_ELF) \
+	"
+	$(call ENDGROUP)
 	$(call GROUP,Generate coverage report)
 	$(DOCKER_COMMAND_PREFIX) bash -lc " \
 		cd $(REPO_ROOT)/e2e-tests && \
@@ -173,6 +182,12 @@ coverage-report:
 			--ignore-errors source \
 			--output-directory Build/coverage-html \
 			--title 'EC Secure Partition Coverage' \
+	"
+	$(call ENDGROUP)
+	$(call GROUP,Check E2E coverage threshold)
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/e2e-tests && \
+		bash scripts/check-coverage-threshold.sh Build/coverage.info 50 \
 	"
 	$(call ENDGROUP)
 

@@ -12,6 +12,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "battery"
+version = "0.1.0"
+dependencies = [
+ "ffa",
+ "log",
+ "test-support",
+ "uefi",
+]
+
+[[package]]
 name = "bit_field"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -45,10 +55,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "fwmgmt"
+version = "0.1.0"
+dependencies = [
+ "ffa",
+ "log",
+ "test-support",
+ "uefi",
+]
+
+[[package]]
 name = "log"
 version = "0.4.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
+
+[[package]]
+name = "notify"
+version = "0.1.0"
+dependencies = [
+ "ffa",
+ "log",
+ "test-support",
+ "uefi",
+ "uuid",
+]
 
 [[package]]
 name = "num_enum"
@@ -154,6 +185,7 @@ dependencies = [
  "log",
  "test-support",
  "uefi",
+ "uuid",
 ]
 
 [[package]]
