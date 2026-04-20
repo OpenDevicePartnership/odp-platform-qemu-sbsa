@@ -50,4 +50,20 @@ else
 	"
 endif
 
-.PHONY: all clean
+# ------------------------------------------------------------
+# Run host unit test coverage with cargo-tarpaulin
+# ------------------------------------------------------------
+host-coverage: builder-image
+	$(call GROUP,Host unit test coverage — cargo-tarpaulin)
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/secure-services/platform && \
+		mkdir -p ../Build/host-coverage-html && \
+		CARGO_BUILD_TARGET=x86_64-unknown-linux-gnu cargo tarpaulin \
+			--packages ec-service-lib qemu-ec-sp \
+			--out html \
+			--output-dir ../Build/host-coverage-html \
+			--fail-under 80 \
+	"
+	$(call ENDGROUP)
+
+.PHONY: all clean host-coverage
