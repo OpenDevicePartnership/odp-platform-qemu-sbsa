@@ -13,6 +13,15 @@ use uuid::Uuid;
 /// also claims the TPM UUID. Both services run in the same EC SP.
 pub const THERMAL_UUID: Uuid = uuid::uuid!("31f56da7-593c-4d72-a4b3-8fc7171ac073");
 
+/// EC Battery service UUID: 25cb5207-ac36-427d-aaef-3aa78877d27e
+pub const BATTERY_UUID: Uuid = uuid::uuid!("25cb5207-ac36-427d-aaef-3aa78877d27e");
+
+/// EC FwMgmt service UUID: 330c1273-fde5-4757-9819-5b6539037502
+pub const FWMGMT_UUID: Uuid = uuid::uuid!("330c1273-fde5-4757-9819-5b6539037502");
+
+/// EC Notify service UUID: e474d87e-5731-4044-a727-cb3e8cf3c8df
+pub const NOTIFY_UUID: Uuid = uuid::uuid!("e474d87e-5731-4044-a727-cb3e8cf3c8df");
+
 pub const FFA_MSG_SEND_DIRECT_REQ2: u64 = 0xC400008D;
 pub const FFA_MSG_SEND_DIRECT_RESP2: u64 = 0xC400008E;
 const FFA_INTERRUPT: u64 = 0x84000062;
