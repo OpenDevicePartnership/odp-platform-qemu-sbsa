@@ -17,6 +17,9 @@ include ../Common.mk
 TARGET_DIR := target/aarch64-unknown-uefi/release
 THERMAL_EFI := $(TARGET_DIR)/thermal.efi
 TPM_EFI := $(TARGET_DIR)/tpm.efi
+BATTERY_EFI := $(TARGET_DIR)/battery.efi
+FWMGMT_EFI := $(TARGET_DIR)/fwmgmt.efi
+NOTIFY_EFI := $(TARGET_DIR)/notify.efi
 BIOS_BUILD_DIR := ../$(BIOS_FV_DIR)
 SECURE_FLASH0 := $(BIOS_BUILD_DIR)/SECURE_FLASH0.fd
 QEMU_EFI := $(BIOS_BUILD_DIR)/QEMU_EFI.fd
@@ -53,7 +56,7 @@ COVERAGE_LOG := Build/coverage.log
 SP_ELF := ../secure-services/platform/target/aarch64-unknown-none/coverage/qemu-ec-sp
 
 # All test EFI binaries
-TEST_EFIS := $(THERMAL_EFI) $(TPM_EFI)
+TEST_EFIS := $(THERMAL_EFI) $(TPM_EFI) $(BATTERY_EFI) $(FWMGMT_EFI) $(NOTIFY_EFI)
 
 # ------------------------------------------------------------
 # Build all test EFI binaries
