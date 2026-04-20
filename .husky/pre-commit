@@ -4,7 +4,7 @@
 
 set -e
 
-PROJECTS="e2e-tests secure-services/platform"
+PROJECTS="e2e-tests mod/secure-services/platform"
 
 echo "=== pre-commit: checking Rust formatting ==="
 for proj in $PROJECTS; do

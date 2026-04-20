@@ -138,7 +138,7 @@ ENV PATH="/usr/local/lib/sccache:$PATH"
 
 # Install stuart tools for building UEFI
 USER vscode
-COPY bios/patina-qemu/pip-requirements.txt /tmp/pip-requirements.txt
+COPY mod/uefi/patina-qemu/pip-requirements.txt /tmp/pip-requirements.txt
 RUN pip install --upgrade -r /tmp/pip-requirements.txt pip lcov_cobertura
 USER root
 

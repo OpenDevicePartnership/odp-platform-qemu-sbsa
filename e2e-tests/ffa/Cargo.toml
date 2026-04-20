@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 log = { version = "0.4", default-features = false }
-odp-ffa = { path = "../../secure-services/odp-secure-services/odp-ffa" }
+odp-ffa = { path = "../../mod/secure-services/odp-secure-services/odp-ffa" }
 uuid = { version = "1.0", default-features = false, features = ["v1"] }

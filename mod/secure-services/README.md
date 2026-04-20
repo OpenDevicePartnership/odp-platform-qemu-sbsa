@@ -21,4 +21,4 @@ linker/qemu.ld
 
 The GUID's size and offset must match those in the sp_layout.json generated from PlatformBuild.py. The addresses for the secure partitions in the hafnium manifest can be found in the tfa_patches folder under:
 
-`bios/Platforms/QemuSbsaPkg/tfa_patches`
+`mod/uefi/Platforms/QemuSbsaPkg/tfa_patches`

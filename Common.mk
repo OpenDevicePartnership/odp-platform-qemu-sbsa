@@ -31,7 +31,7 @@ endif
 # Shared across the top-level Makefile, e2e-tests/Makefile, and
 # os-image/Makefile.  Individual targets append pflash drives,
 # serial, display, and any extra device flags.
-BIOS_FV_DIR := bios/patina-qemu/Build/QemuSbsaPkg/DEBUG_CLANGPDB/FV
+BIOS_FV_DIR := mod/uefi/patina-qemu/Build/QemuSbsaPkg/DEBUG_CLANGPDB/FV
 
 QEMU_COMMON_ARGS := \
 	-semihosting -cpu max,sve=off,sme=off -smp 4 -machine sbsa-ref \

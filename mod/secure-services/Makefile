@@ -10,7 +10,7 @@ QEMU_RUST_BIN := Build/qemu-ec-sp.bin
 QEMU_RUST_DTS := Build/qemu-ec-sp.dts
 EC_SECURE_DTS := platform/linker/qemu-ec-sp.dts
 
-include ../Common.mk
+include ../../Common.mk
 
 # Optional cargo features (e.g. test-bypass-locality-check for e2e tests)
 CARGO_FEATURES ?=
@@ -25,7 +25,7 @@ all: $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
 $(QEMU_RUST_BIN): $(QEMU_RUST_DTS) builder-image
 	$(call GROUP,Build Secure EC Service)
 	$(DOCKER_COMMAND_PREFIX) bash -lc " \
-		cd $(REPO_ROOT)/secure-services && \
+		cd $(REPO_ROOT)/mod/secure-services && \
 		mkdir -p Build && \
 		cd platform && \
 		cargo objcopy --target=aarch64-unknown-none --profile $(CARGO_PROFILE) $(if $(CARGO_FEATURES),--features=$(CARGO_FEATURES),) -- -O binary ../$(QEMU_RUST_BIN) \
@@ -45,7 +45,7 @@ ifeq ($(IN_DEVCONTAINER),1)
 	cd platform && cargo clean
 else
 	$(DOCKER_COMMAND_PREFIX) bash -lc " \
-		cd $(REPO_ROOT)/secure-services/platform && \
+		cd $(REPO_ROOT)/mod/secure-services/platform && \
 		cargo clean \
 	"
 endif

@@ -29,12 +29,11 @@ Each sub folder has its own Makefile script to build each subcomponent.
 odp-platform-qemu-sbsa
   |- .github/           Github automation support (CI/CD)
   |- .devcontainer/     Devcontainer definitions
-  |- bios/              ACPI, UEFI, TF-A, Hafnium and image creation
+  |- mod/               ACPI, UEFI, TF-A, Hafnium and secure service modules
   |- docs/              Documentation
   |- e2e-tests/         End-to-end tests for secure partition services
   |- ec/                EC MCU code
-  |- secure-partition/  EC services and other secure partition code
-  |- os-image/          Scripts and steps for OS image generation
+  |- postbuild/         Scripts for stitching SPINOR and OS images together
   |- common/            Tools, utilities and common code
   |- Makefile           Root makefile to make all components
   |- README.md          Quickstart file for each folder level

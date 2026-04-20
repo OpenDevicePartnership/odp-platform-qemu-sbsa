@@ -50,7 +50,7 @@ endif
 # Coverage plugin
 COVERAGE_PLUGIN := Build/libcoverage.so
 COVERAGE_LOG := Build/coverage.log
-SP_ELF := ../secure-services/platform/target/aarch64-unknown-none/coverage/qemu-ec-sp
+SP_ELF := ../mod/secure-services/platform/target/aarch64-unknown-none/coverage/qemu-ec-sp
 
 # All test EFI binaries
 TEST_EFIS := $(THERMAL_EFI) $(TPM_EFI)

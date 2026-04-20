@@ -52,7 +52,7 @@ jobs:
 
       - name: Checkout patina-qemu submodule
         run: |
-          git submodule update --init bios/patina-qemu
+          git submodule update --init mod/uefi/patina-qemu
 
       - name: Set up QEMU for multi-architecture builds
         uses: docker/setup-qemu-action@v3
