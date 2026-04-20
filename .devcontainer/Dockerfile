@@ -103,7 +103,7 @@ ENV PATH="$HOME/.cargo/bin:$PATH"
 USER vscode
 RUN RUST_VERSION=1.92.0 && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION} --profile minimal && \
-    rustup component add rustfmt rust-src && \
+    rustup component add clippy rustfmt rust-src && \
     rustup target add aarch64-unknown-none aarch64-unknown-uefi && \
     rustup component add llvm-tools-preview && \
     cargo install cargo-binstall@1.17.7 --locked && \
