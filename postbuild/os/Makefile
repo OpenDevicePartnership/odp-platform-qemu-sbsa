@@ -6,7 +6,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-include ../Common.mk
+include ../../Common.mk
 
 # ------------------------------------------------------------
 # Workspace setup
