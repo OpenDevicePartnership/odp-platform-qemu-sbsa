@@ -1,0 +1,4 @@
+# UEFI shell writes logs to the FAT vdrive at runtime; only startup.nsh is tracked
+*
+!.gitignore
+!startup.nsh
