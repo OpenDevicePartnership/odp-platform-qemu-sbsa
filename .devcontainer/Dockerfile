@@ -59,6 +59,7 @@ RUN apt-get update && \
     gcc \
     gcc-aarch64-linux-gnu \
     qemu-utils \
+    qemu-system-misc \
     swtpm \
     swtpm-tools \
     && \
@@ -104,13 +105,14 @@ USER vscode
 RUN RUST_VERSION=1.92.0 && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION} --profile minimal && \
     rustup component add clippy rustfmt rust-src && \
-    rustup target add aarch64-unknown-none aarch64-unknown-uefi && \
+    rustup target add aarch64-unknown-none aarch64-unknown-uefi riscv32imac-unknown-none-elf && \
     rustup component add llvm-tools-preview && \
     cargo install cargo-binstall@1.17.7 --locked && \
     cargo binstall -y cargo-binutils && \
     cargo binstall -y cargo-make@0.37.24 && \
     cargo binstall -y cargo-tarpaulin@0.31.5 && \
-    cargo binstall -y sccache@0.10.0
+    cargo binstall -y sccache@0.10.0 && \
+    cargo binstall -y defmt-print@1.0.0
 USER root
 
 #

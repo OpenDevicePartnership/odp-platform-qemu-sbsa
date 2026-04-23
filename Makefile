@@ -11,7 +11,7 @@ include Common.mk
 # ------------------------------------------------------------
 # Default target
 # ------------------------------------------------------------
-all: secure-services uefi e2e-tests
+all: secure-services ec uefi e2e-tests
 
 # ------------------------------------------------------------
 # Build Secure Services
@@ -30,6 +30,25 @@ secure-services-test:
 uefi: secure-services
 	$(MAKE) -C mod/uefi patina-qemu-ec
 	$(MAKE) -C mod/uefi patina-qemu-ec
+
+# ------------------------------------------------------------
+# Build EC firmware (RISC-V)
+# ------------------------------------------------------------
+EC_BUILD_DIR := mod/ec/platform/dev-qemu
+EC_BINARY := $(EC_BUILD_DIR)/target/riscv32imac-unknown-none-elf/release/dev-qemu
+EC_SOURCES := $(shell find mod/ec -type f \( -name '*.rs' -o -name 'Cargo.toml' -o -name 'Cargo.lock' -o -name 'build.rs' -o -name 'memory.x' \) 2>/dev/null)
+
+# Phony alias — lets callers say `make ec` while the real rule is on the artifact.
+ec: $(EC_BINARY)
+
+$(EC_BINARY): $(EC_SOURCES) | builder-image
+	$(call GROUP,Build EC firmware)
+	$(DOCKER_COMMAND_PREFIX) bash -lc " \
+		cd $(REPO_ROOT)/$(EC_BUILD_DIR) && \
+		cargo build --release --locked \
+	"
+	$(call ENDGROUP)
+	@touch $@
 
 # ------------------------------------------------------------
 # Run QEMU with the built UEFI firmware
@@ -62,4 +81,4 @@ clean:
 	$(MAKE) -C mod/uefi clean
 	$(MAKE) -C e2e-tests clean
 
-.PHONY: all secure-services secure-services-test uefi run run-in-devcontainer e2e-test clean
+.PHONY: all secure-services secure-services-test uefi ec run run-in-devcontainer e2e-test clean
