@@ -24,6 +24,7 @@ aarch64-haf = { path = "../odp-secure-services/aarch64-haf" }
 ec-service-lib = { path = "../odp-secure-services/ec-service-lib" }
 hafnium = { path = "../odp-secure-services/hafnium" }
 odp-ffa = { path = "../odp-secure-services/odp-ffa" }
+qemu-sp-uart = { path = "qemu-sp-uart" }
 log = { version = "0.4", default-features = false }
 uuid = { version = "1.0", default-features = false, features = ["v1"] }
 

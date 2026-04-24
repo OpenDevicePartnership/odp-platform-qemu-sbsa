@@ -258,8 +258,13 @@ dependencies = [
  "hafnium",
  "log",
  "odp-ffa",
+ "qemu-sp-uart",
  "uuid",
 ]
+
+[[package]]
+name = "qemu-sp-uart"
+version = "0.1.0"
 
 [[package]]
 name = "quote"
