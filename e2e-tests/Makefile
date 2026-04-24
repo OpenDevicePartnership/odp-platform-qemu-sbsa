@@ -64,10 +64,7 @@ all: build
 .PHONY: build
 build: builder-image
 	$(call GROUP,Build E2E test binaries)
-	$(DOCKER_COMMAND_PREFIX) bash -lc " \
-		cd $(REPO_ROOT)/e2e-tests && \
-		cargo build --release \
-	"
+	@$(DC_RUN) -w e2e-tests -- cargo build --release
 	$(call ENDGROUP)
 
 # ------------------------------------------------------------
@@ -87,10 +84,7 @@ $(VDRIVE_DIR): build $(TEST_EFIS) startup.nsh
 # ------------------------------------------------------------
 $(COVERAGE_PLUGIN): builder-image
 	$(call GROUP,Build coverage plugin)
-	$(DOCKER_COMMAND_PREFIX) bash -lc " \
-		cd $(REPO_ROOT)/e2e-tests && \
-		make -C coverage-plugin BUILD_DIR=../Build \
-	"
+	@$(DC_RUN) -w e2e-tests -- make -C coverage-plugin BUILD_DIR=../Build
 	$(call ENDGROUP)
 
 .PHONY: test
@@ -102,9 +96,8 @@ else
 	@echo "    (serial output streaming to Build/test-output.log)"
 endif
 	$(call GROUP,QEMU serial output)
-	@$(DOCKER_COMMAND_PREFIX) bash -lc '\
+	@$(DC_RUN) -w e2e-tests -- bash -c '\
 		set -o pipefail; \
-		cd $(REPO_ROOT)/e2e-tests && \
 		mkdir -p $(SWTPM_DIR) && \
 		rm -f $(SWTPM_SOCK) || exit 1; \
 		swtpm socket \
@@ -161,19 +154,16 @@ endif
 .PHONY: coverage-report
 coverage-report:
 	$(call GROUP,Generate coverage report)
-	$(DOCKER_COMMAND_PREFIX) bash -lc " \
-		cd $(REPO_ROOT)/e2e-tests && \
-		python3 scripts/pcs-to-lcov.py \
-			--elf $(SP_ELF) \
-			--input $(COVERAGE_LOG) \
-			--output Build/coverage.info \
-			--source-prefix odp-secure-services \
-			--source-prefix odp-platform-qemu-sbsa && \
-		genhtml Build/coverage.info \
-			--ignore-errors source \
-			--output-directory Build/coverage-html \
-			--title 'EC Secure Partition Coverage' \
-	"
+	@$(DC_RUN) -w e2e-tests -- python3 scripts/pcs-to-lcov.py \
+		--elf $(SP_ELF) \
+		--input $(COVERAGE_LOG) \
+		--output Build/coverage.info \
+		--source-prefix odp-secure-services \
+		--source-prefix odp-platform-qemu-sbsa
+	@$(DC_RUN) -w e2e-tests -- genhtml Build/coverage.info \
+		--ignore-errors source \
+		--output-directory Build/coverage-html \
+		--title 'EC Secure Partition Coverage'
 	$(call ENDGROUP)
 
 # ------------------------------------------------------------
@@ -182,8 +172,5 @@ coverage-report:
 .PHONY: clean
 clean:
 	rm -rf Build
-	$(DOCKER_COMMAND_PREFIX) bash -lc " \
-		cd $(REPO_ROOT)/e2e-tests && \
-		cargo clean && \
-		make -C coverage-plugin clean \
-	"
+	@$(DC_RUN) -w e2e-tests -- cargo clean
+	@$(DC_RUN) -w e2e-tests -- make -C coverage-plugin clean

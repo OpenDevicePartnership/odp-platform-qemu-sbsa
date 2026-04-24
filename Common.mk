@@ -46,13 +46,12 @@ QEMU_COMMON_ARGS := \
 # ------------------------------------------------------------
 # Devcontainer command variables
 # ------------------------------------------------------------
-ifeq ($(IN_DEVCONTAINER),1)
-DOCKER_COMMAND_PREFIX :=
-REPO_ROOT := $(REPO_ROOT_IN_HOST)
-else
-DOCKER_COMMAND_PREFIX := devcontainer exec $(DEVCONTAINER_WORKSPACE_FLAGS)
-REPO_ROOT := $(REPO_ROOT_IN_DEVCONTAINER)
-endif
+# scripts/dc-run.sh is the single dispatcher: it detects in/out of the
+# devcontainer (via IN_DEVCONTAINER / DC_RUN_REEXEC) and either runs the
+# command directly or re-execs itself via `devcontainer exec`. Recipes use
+# `$(DC_RUN) [-w <workdir>] -- cmd args...` instead of the old shell-in-shell
+# `$(DOCKER_COMMAND_PREFIX) bash -lc "cd ... && ..."` pattern.
+DC_RUN := $(REPO_ROOT_IN_HOST)/scripts/dc-run.sh
 
 
 $(DEVCONTAINER_STAMP): $(DEVCONTAINER_FILES)

@@ -24,12 +24,9 @@ all: $(QEMU_RUST_BIN) $(QEMU_RUST_DTS)
 # ------------------------------------------------------------
 $(QEMU_RUST_BIN): $(QEMU_RUST_DTS) builder-image
 	$(call GROUP,Build Secure EC Service)
-	$(DOCKER_COMMAND_PREFIX) bash -lc " \
-		cd $(REPO_ROOT)/mod/secure-services && \
-		mkdir -p Build && \
-		cd platform && \
-		cargo objcopy --target=aarch64-unknown-none --profile $(CARGO_PROFILE) $(if $(CARGO_FEATURES),--features=$(CARGO_FEATURES),) -- -O binary ../$(QEMU_RUST_BIN) \
-	"
+	@mkdir -p Build
+	@$(DC_RUN) -w mod/secure-services/platform -- \
+		cargo objcopy --target=aarch64-unknown-none --profile $(CARGO_PROFILE) $(if $(CARGO_FEATURES),--features=$(CARGO_FEATURES),) -- -O binary ../$(QEMU_RUST_BIN)
 	$(call ENDGROUP)
 
 # ------------------------------------------------------------
@@ -41,13 +38,6 @@ $(QEMU_RUST_DTS): $(EC_SECURE_DTS)
 
 clean:
 	rm -rf Build
-ifeq ($(IN_DEVCONTAINER),1)
-	cd platform && cargo clean
-else
-	$(DOCKER_COMMAND_PREFIX) bash -lc " \
-		cd $(REPO_ROOT)/mod/secure-services/platform && \
-		cargo clean \
-	"
-endif
+	@$(DC_RUN) -w mod/secure-services/platform -- cargo clean
 
 .PHONY: all clean

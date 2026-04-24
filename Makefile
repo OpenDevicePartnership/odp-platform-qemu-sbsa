@@ -61,10 +61,7 @@ $(EC_SUBMODULE_MANIFEST):
 # parse time) still invalidates the binary.
 $(EC_BINARY): $(EC_SUBMODULE_MANIFEST) $(EC_SOURCES) .git/modules/mod/ec/HEAD | builder-image
 	$(call GROUP,Build EC firmware)
-	$(DOCKER_COMMAND_PREFIX) bash -lc " \
-		cd $(REPO_ROOT)/$(EC_BUILD_DIR) && \
-		cargo build --release --locked \
-	"
+	@$(DC_RUN) -w $(EC_BUILD_DIR) -- cargo build --release --locked
 	$(call ENDGROUP)
 	@touch $@
 
@@ -80,14 +77,13 @@ test-serial: $(EC_BINARY) uefi | builder-image
 	@mkdir -p Build
 	@echo "=== Running serial link test (EC timeout=$(EC_SERIAL_TIMEOUT)s, SBSA timeout=$(SBSA_SERIAL_TIMEOUT)s) ==="
 	$(call GROUP,Serial link test)
-	@$(DOCKER_COMMAND_PREFIX) bash -lc 'cd $(REPO_ROOT) && \
-		scripts/test-serial.sh \
-			--ec-elf $(EC_BINARY) \
-			--bios-fv-dir $(BIOS_FV_DIR) \
-			--build-dir Build \
-			--ec-timeout $(EC_SERIAL_TIMEOUT) \
-			--sbsa-timeout $(SBSA_SERIAL_TIMEOUT) \
-			-- $(QEMU_COMMON_ARGS)'
+	@$(DC_RUN) -- scripts/test-serial.sh \
+		--ec-elf $(EC_BINARY) \
+		--bios-fv-dir $(BIOS_FV_DIR) \
+		--build-dir Build \
+		--ec-timeout $(EC_SERIAL_TIMEOUT) \
+		--sbsa-timeout $(SBSA_SERIAL_TIMEOUT) \
+		-- $(QEMU_COMMON_ARGS)
 	$(call ENDGROUP)
 
 # ------------------------------------------------------------
@@ -102,7 +98,7 @@ run: secure-services uefi
 		-display vnc=:1
 
 run-in-devcontainer: secure-services uefi
-	$(DOCKER_COMMAND_PREFIX) bash -lc "make run"
+	@$(DC_RUN) -- make run
 
 # ------------------------------------------------------------
 # Run E2E tests against the secure partition
