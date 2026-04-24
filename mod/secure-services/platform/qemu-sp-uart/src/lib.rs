@@ -90,6 +90,13 @@ pub enum Error {
 /// Default RX iteration budget. Tuned conservatively to fail well before the
 /// outer `make e2e-test` watchdog (per UD-02). Wall-clock duration varies by
 /// CPU/build profile (Phase 14 D-4 accepts this).
+///
+/// **Practical note (Plan 14-02 finding):** on QEMU SBSA this budget exhausts
+/// in milliseconds — far less than the seconds an EC round-trip actually needs.
+/// Callers expecting an SP↔EC reply (e.g. MCTP relay) MUST pass a larger
+/// `max_iters` to [`Pl011Uart::read_byte_timeout`] (`u32::MAX` is a safe
+/// upper bound; it caps at a few seconds of QEMU wall-clock). The default
+/// is appropriate for unit-test "no-byte-arrived" assertions and host fakes.
 pub const DEFAULT_RX_TIMEOUT_ITERS: u32 = 1_000_000;
 
 /// Blocking PL011 UART driver. Generic over the [`Mmio`] backend.
