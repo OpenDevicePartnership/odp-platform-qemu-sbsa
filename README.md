@@ -15,7 +15,8 @@ From VS code menu run  `Terminal -> New Terminal` and run  `make all` from the r
 To run QEMU with the image you generated you can run `make run` from the root folder
 
 To run end-to-end tests against the secure partition: `make e2e-test`
-(builds everything first, then launches QEMU and runs the test suite).
+(builds everything, runs the EC↔SBSA serial-link smoke test, then
+launches QEMU and runs the full e2e test suite).
 See [docs/e2e-tests.md](docs/e2e-tests.md) for details.
 
 After tests run, a code coverage report for the secure partition is generated
@@ -34,6 +35,7 @@ odp-platform-qemu-sbsa
   |- e2e-tests/         End-to-end tests for secure partition services
   |- ec/                EC MCU code
   |- postbuild/         Scripts for stitching SPINOR and OS images together
+  |- scripts/           Build & dev helper scripts (e.g. dc-run.sh devcontainer dispatcher)
   |- common/            Tools, utilities and common code
   |- Makefile           Root makefile to make all components
   |- README.md          Quickstart file for each folder level

@@ -33,6 +33,11 @@ endif
 # serial, display, and any extra device flags.
 BIOS_FV_DIR := mod/uefi/patina-qemu/Build/QemuSbsaPkg/DEBUG_CLANGPDB/FV
 
+# Path to the EC firmware binary (relative to repo root). Built by
+# `make -C mod ec`. Top-level recipes (e2e-test) reference it without
+# owning the build rule.
+EC_BINARY := mod/ec/platform/dev-qemu/target/riscv32imac-unknown-none-elf/release/dev-qemu
+
 QEMU_COMMON_ARGS := \
 	-semihosting -cpu max,sve=off,sme=off -smp 4 -machine sbsa-ref \
 	-global driver=cfi.pflash01,property=secure,value=on -m 4G \

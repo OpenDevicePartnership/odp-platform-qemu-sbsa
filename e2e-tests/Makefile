@@ -17,34 +17,26 @@ include ../Common.mk
 TARGET_DIR := target/aarch64-unknown-uefi/release
 THERMAL_EFI := $(TARGET_DIR)/thermal.efi
 TPM_EFI := $(TARGET_DIR)/tpm.efi
-BIOS_BUILD_DIR := ../$(BIOS_FV_DIR)
-SECURE_FLASH0 := $(BIOS_BUILD_DIR)/SECURE_FLASH0.fd
-QEMU_EFI := $(BIOS_BUILD_DIR)/QEMU_EFI.fd
 
 # Timeout for QEMU execution (seconds)
 QEMU_TIMEOUT ?= 180
 
+# Bounds on the serial-link test (test-serial). EC has done its useful work
+# (boot, announce PTY, exchange a few messages) well within 30s, after which it
+# spins in tight async loops that starve SBSA of host CPU. Killing EC early lets
+# SBSA reach the UEFI shell and self-terminate within SBSA_SERIAL_TIMEOUT.
+EC_SERIAL_TIMEOUT  ?= 30
+SBSA_SERIAL_TIMEOUT ?= 60
+
 # Virtual drive directory for UEFI Shell to find test EFI binaries
 VDRIVE_DIR := Build/vdrive
 
-# swtpm state directory and socket path
-SWTPM_DIR := Build/tpm
-SWTPM_SOCK := $(SWTPM_DIR)/swtpm-sock
-
-# Tee QEMU serial output to stdout (auto-enabled in CI)
+# Tee QEMU serial output to stdout (auto-enabled in CI). Passed through to
+# scripts/test-e2e.sh, which owns the actual -serial / tee plumbing.
 ifeq ($(CI),true)
 SERIAL_TEE ?= 1
 else
 SERIAL_TEE ?= 0
-endif
-
-# Serial output redirection: tee to stdout+file, or just file
-ifeq ($(SERIAL_TEE),1)
-SERIAL_FLAG := -serial stdio
-SERIAL_REDIRECT := 2>&1 | tee Build/test-output.log
-else
-SERIAL_FLAG := -serial file:Build/test-output.log
-SERIAL_REDIRECT :=
 endif
 
 # Coverage plugin
@@ -96,57 +88,41 @@ else
 	@echo "    (serial output streaming to Build/test-output.log)"
 endif
 	$(call GROUP,QEMU serial output)
-	@$(DC_RUN) -w e2e-tests -- bash -c '\
-		set -o pipefail; \
-		mkdir -p $(SWTPM_DIR) && \
-		rm -f $(SWTPM_SOCK) || exit 1; \
-		swtpm socket \
-			--tpmstate dir=$(SWTPM_DIR) \
-			--ctrl type=unixio,path=$(SWTPM_SOCK) \
-			--tpm2 --log level=20,file=Build/swtpm.log & \
-		SWTPM_PID=$$!; \
-		for i in $$(seq 1 50); do [ -S $(SWTPM_SOCK) ] && break; sleep 0.1; done; \
-		if [ ! -S $(SWTPM_SOCK) ]; then echo "ERROR: swtpm socket not created"; kill $$SWTPM_PID 2>/dev/null; exit 1; fi; \
-		timeout $(QEMU_TIMEOUT) \
-			qemu-system-aarch64 \
-				$(QEMU_COMMON_ARGS) \
-				-plugin file=$(COVERAGE_PLUGIN),outfile=$(COVERAGE_LOG) \
-				-drive if=pflash,format=raw,unit=0,file=$(SECURE_FLASH0) \
-				-drive if=pflash,format=raw,unit=1,file=$(QEMU_EFI),readonly=on \
-				-chardev socket,id=chrtpm,path=$(SWTPM_SOCK) \
-				-tpmdev emulator,id=tpm0,chardev=chrtpm \
-				-drive file=fat:rw:$(VDRIVE_DIR),format=raw,media=disk \
-				$(SERIAL_FLAG) \
-				-display none \
-				-no-reboot \
-				$(SERIAL_REDIRECT); \
-		QEMU_EXIT=$$?; \
-		kill $$SWTPM_PID 2>/dev/null; wait $$SWTPM_PID 2>/dev/null; \
-		exit $$QEMU_EXIT; \
-	' & QEMU_PID=$$!; \
-	trap "kill $$QEMU_PID 2>/dev/null; wait $$QEMU_PID 2>/dev/null; exit 130" INT TERM; \
-	wait $$QEMU_PID; echo $$? > Build/qemu-exit-code
+	@$(DC_RUN) -- scripts/test-e2e.sh \
+		--bios-fv-dir $(BIOS_FV_DIR) \
+		--build-dir e2e-tests/Build \
+		--vdrive-dir e2e-tests/$(VDRIVE_DIR) \
+		--coverage-plugin e2e-tests/$(COVERAGE_PLUGIN) \
+		--coverage-log e2e-tests/$(COVERAGE_LOG) \
+		--qemu-timeout $(QEMU_TIMEOUT) \
+		--serial-tee $(SERIAL_TEE) \
+		-- $(QEMU_COMMON_ARGS)
 	$(call ENDGROUP)
-	@EXIT_CODE=$$(cat Build/qemu-exit-code); \
-	echo "=== Test output summary ==="; \
-	grep -E "\[(PASS|FAIL)\]" Build/test-output.log || true; \
-	echo ""; \
-	if ! grep -q "EC Secure Partition E2E Tests" Build/test-output.log; then \
-		echo "RESULT: TESTS NEVER RAN (banner not found in output)"; \
-		exit 1; \
-	elif grep -q "\[FAIL\]" Build/test-output.log; then \
-		echo "RESULT: SOME TESTS FAILED"; \
-		exit 1; \
-	elif [ "$$EXIT_CODE" = "0" ] && grep -q '^--- Results: [0-9]\+ passed, 0 failed ---$$' Build/test-output.log; then \
-		echo "RESULT: ALL TESTS PASSED"; \
-		exit 0; \
-	elif [ "$$EXIT_CODE" = "124" ]; then \
-		echo "RESULT: TIMED OUT (no test output seen)"; \
-		exit 1; \
-	else \
-		echo "RESULT: NO TEST OUTPUT FOUND (exit code $$EXIT_CODE)"; \
-		exit 1; \
-	fi
+
+# ------------------------------------------------------------
+# Serial Communication Test
+# ------------------------------------------------------------
+# Launches EC QEMU with `-serial pty` (QEMU allocates a pseudo-tty
+# and prints its path to stderr), parses the path, then launches
+# SBSA QEMU with a `serial` chardev opening that PTY as serial1
+# (SBSA_SECURE_UART @ 0x60030000).
+# Verifies: PTY announced, EC booted, SBSA started without errors.
+#
+# Caller (top-level Makefile) is responsible for ensuring `ec` and `uefi`
+# are built; this target only runs the serial check.
+.PHONY: test-serial
+test-serial: | builder-image
+	@mkdir -p Build
+	@echo "=== Running serial link test (EC timeout=$(EC_SERIAL_TIMEOUT)s, SBSA timeout=$(SBSA_SERIAL_TIMEOUT)s) ==="
+	$(call GROUP,Serial link test)
+	@$(DC_RUN) -- scripts/test-serial.sh \
+		--ec-elf $(EC_BINARY) \
+		--bios-fv-dir $(BIOS_FV_DIR) \
+		--build-dir e2e-tests/Build \
+		--ec-timeout $(EC_SERIAL_TIMEOUT) \
+		--sbsa-timeout $(SBSA_SERIAL_TIMEOUT) \
+		-- $(QEMU_COMMON_ARGS)
+	$(call ENDGROUP)
 
 # ------------------------------------------------------------
 # Generate coverage report from collected PCs
