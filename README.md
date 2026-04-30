@@ -1,6 +1,9 @@
 # odp-platform-qemu-sbsa
 This repo contains all the necessary content for working on QEMU for SBSA (arm64) platform
 
+## WinHEC Demo
+See [docs/winhec-demo.md](docs/winhec-demo.md) for instructions on how to set up the E2E WinHEC demo.
+
 ## Quick Start Guide
 This configuration has been tested on a windows running WSL Ubuntu 24.04 with Visual Studio Code.
 
