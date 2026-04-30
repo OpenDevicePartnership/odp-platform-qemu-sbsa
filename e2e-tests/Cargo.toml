@@ -1,3 +1,10 @@
+# @file Cargo.toml
+#
+# Cargo workspace manifest for the E2E test suite
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: Apache-2.0
+
 [workspace]
 members = ["ffa", "uart-logger", "test-support", "tests/thermal", "tests/tpm"]
 resolver = "2"

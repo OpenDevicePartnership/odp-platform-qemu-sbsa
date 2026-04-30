@@ -1,12 +1,9 @@
-# E2E Tests for EC Secure Partition
+# @file Makefile
 #
-# Builds Rust UEFI test applications, launches QEMU with the existing
-# BIOS firmware, and executes tests against the secure partition.
-#
-# ## License
+# E2E Tests for EC Secure Partition. Builds Rust UEFI test applications, launches QEMU with the existing BIOS
+# firmware, and executes tests against the secure partition.
 #
 # Copyright (c) Microsoft Corporation.
-#
 # SPDX-License-Identifier: Apache-2.0
 
 SHELL := /bin/bash

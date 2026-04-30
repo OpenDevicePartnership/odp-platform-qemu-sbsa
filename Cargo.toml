@@ -1,9 +1,9 @@
-# Dummy root crate used solely to drive husky-rs git hook installation.
-# Running `cargo build` or `cargo test` here will configure `.husky/` as
-# the git hooks directory via husky-rs's build script.
+# @file Cargo.toml
 #
-# The pre-commit hook checks formatting and runs clippy on the real Rust
-# projects (e2e-tests and secure-services/platform).
+# Dummy root crate used solely to drive husky-rs git hook installation.
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: Apache-2.0
 
 [package]
 name = "odp-platform-hooks"

@@ -1,3 +1,11 @@
+/** @file
+  Thermal zone ACPI device nodes for the QEMU SBSA platform
+
+  Copyright (c) Microsoft Corporation.
+  SPDX-License-Identifier: BSD-2-Clause-Patent
+
+**/
+
 // Sample Definition of FAN ACPI
 
 Device(SKIN) {

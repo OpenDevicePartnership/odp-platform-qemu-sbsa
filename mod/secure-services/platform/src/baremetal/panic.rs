@@ -1,4 +1,10 @@
+//! @file panic.rs
+//!
 //! A panic handler that infinitely waits.
+//!
+//! Copyright (c) Microsoft Corporation.
+//! SPDX-License-Identifier: Apache-2.0
+
 use core::panic::PanicInfo;
 
 use aarch64_cpu::asm;

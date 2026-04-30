@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# @file push-devcontainer-cache.sh
+#
 # push-devcontainer-cache.sh
 #
 # Rebuilds and pushes the devcontainer image cache to GHCR using the
@@ -26,6 +28,9 @@
 #   ./scripts/push-devcontainer-cache.sh [IMAGE_NAME]
 #
 # IMAGE_NAME defaults to ghcr.io/<gh-user>/odp-platform-qemu-sbsa-devcontainer.
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: Apache-2.0
 
 set -euo pipefail
 

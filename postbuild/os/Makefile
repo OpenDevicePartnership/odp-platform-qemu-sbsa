@@ -1,9 +1,8 @@
-# OS Image Makefile
+# @file Makefile
 #
-# ## License
+# OS Image build targets for the ODP QEMU SBSA Platform
 #
 # Copyright (c) Microsoft Corporation.
-#
 # SPDX-License-Identifier: Apache-2.0
 
 include ../../Common.mk

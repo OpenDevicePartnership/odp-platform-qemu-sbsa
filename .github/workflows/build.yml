@@ -1,9 +1,11 @@
-# This workflow builds the devcontainer image and QEMU BIOS as part of pull
-# request validation.
+# @file build.yml
 #
+# This workflow builds the devcontainer image and QEMU BIOS as part of pull request validation.
+#
+##
 # Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: BSD-2-Clause-Patent
-#
+# SPDX-License-Identifier: Apache-2.0
+##
 
 name: Build components
 

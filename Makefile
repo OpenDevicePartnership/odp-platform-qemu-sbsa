@@ -1,9 +1,8 @@
-# ODP SBSA Build file
+# @file Makefile
 #
-# ## License
+# Primary Makefile for the ODP QEMU SBSA Platform firmware build system
 #
 # Copyright (c) Microsoft Corporation.
-#
 # SPDX-License-Identifier: Apache-2.0
 
 include Common.mk

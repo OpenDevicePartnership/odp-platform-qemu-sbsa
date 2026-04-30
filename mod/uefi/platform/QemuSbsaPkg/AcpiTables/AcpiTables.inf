@@ -3,6 +3,7 @@
 #  ACPI table data and ASL sources required to boot the platform.
 #
 #  Copyright (c) 2020, Linaro Ltd. All rights reserved.
+#  Copyright (c) Microsoft Corporation.
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #

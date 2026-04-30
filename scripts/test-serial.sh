@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# @file test-serial.sh
+#
 # scripts/test-serial.sh — Orchestrate the EC ↔ SBSA serial-link test.
 #
 # Owns the long-lived child processes (swtpm + EC QEMU + SBSA QEMU),
@@ -7,6 +9,9 @@
 # Run `test-serial.sh --help` for usage. Must be executed inside the
 # odp-platform-qemu-sbsa devcontainer (requires swtpm, qemu-system-riscv32,
 # qemu-system-aarch64, defmt-print, stdbuf, setsid, timeout, pkill on PATH).
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: Apache-2.0
 
 set -o pipefail
 # Intentionally NOT `set -e`: we use `cmd || EXIT=$?` patterns and the v1.1

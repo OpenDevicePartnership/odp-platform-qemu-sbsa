@@ -8,6 +8,8 @@
  * with the QEMU plugin interface, based on the publicly documented
  * plugin API. No original QEMU source code is included.
  *
+ * Copyright (c) Microsoft Corporation.
+ *
  * SPDX-License-Identifier: MIT
  */
 

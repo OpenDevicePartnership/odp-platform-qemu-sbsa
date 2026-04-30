@@ -5,14 +5,18 @@ The Open Device Partnership project welcomes your suggestions and contributions!
 
 ## Contribution Licensing
 
-Most of our code is distributed under the terms of the [MIT license](LICENSE), and when you contribute code that you wrote to our repositories,
-you agree that you are contributing under those same terms. In addition, by submitting your contributions you are indicating that
-you have the right to submit those contributions under those terms.
+Most of our code is distributed under the terms of the [Apache 2.0 License](LICENSE), and when you contribute code that
+you wrote to our repositories, you agree that you are contributing under those same terms. In addition, by submitting
+your contributions you are indicating that you have the right to submit those contributions under those terms.
+
+Some files in this repository are derived from upstream projects (e.g., EDK2, ARM Trusted Firmware) that use different
+licenses such as `BSD-2-Clause-Patent`. When you contribute to an existing file, your contribution is made under that
+file's existing `SPDX-License-Identifier`. New files that are not derived from upstream code should use `Apache-2.0`.
 
 ## Other Contribution Information
 
-If you wish to contribute code or documentation authored by others, or using the terms of any other license, please indicate that clearly in your
-pull request so that the project team can discuss the situation with you.
+If you wish to contribute code or documentation authored by others, or using the terms of any other license, please
+indicate that clearly in your pull request so that the project team can discuss the situation with you.
 
 ## Commit Message
 

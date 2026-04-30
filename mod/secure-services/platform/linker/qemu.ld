@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Microsoft Corporation.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 MEMORY
 {
 	image : ORIGIN = 0x20802000, LENGTH = 2M

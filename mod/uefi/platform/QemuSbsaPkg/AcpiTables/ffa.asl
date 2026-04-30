@@ -1,3 +1,10 @@
+/** @file
+  FF-A (Firmware Framework for Arm) ACPI device node
+
+  Copyright (c) Microsoft Corporation.
+  SPDX-License-Identifier: BSD-2-Clause-Patent
+
+**/
 
 Device(\_SB_.FFA0) {
   Name(_HID, "ARML0002")

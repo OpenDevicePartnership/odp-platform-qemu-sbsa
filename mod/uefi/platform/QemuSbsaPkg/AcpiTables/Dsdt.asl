@@ -2,6 +2,7 @@
 *  Differentiated System Description Table Fields (DSDT).
 *
 *  Copyright (c) 2020, Linaro Ltd. All rights reserved.
+*  Copyright (c) Microsoft Corporation.
 *
 *  SPDX-License-Identifier: BSD-2-Clause-Patent
 **/

@@ -1,6 +1,11 @@
 #!/bin/sh
+# @file pre-commit
+#
 # Pre-commit hook installed by husky-rs.
 # Checks formatting and runs clippy on the Rust projects in this repo.
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: Apache-2.0
 
 set -e
 

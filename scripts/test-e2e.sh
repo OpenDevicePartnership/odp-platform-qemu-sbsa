@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# @file test-e2e.sh
+#
 # scripts/test-e2e.sh — Run the e2e test suite against the secure partition.
 #
 # Owns the long-lived child processes (swtpm + SBSA QEMU), sets up the
@@ -8,6 +10,9 @@
 # Run `test-e2e.sh --help` for usage. Must be executed inside the
 # odp-platform-qemu-sbsa devcontainer (requires swtpm, qemu-system-aarch64,
 # timeout, tee on PATH).
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: Apache-2.0
 
 set -o pipefail
 # Intentionally NOT `set -e`: we use `cmd || EXIT=$?` patterns and rely

@@ -1,9 +1,8 @@
-# ODP SBSA Build file
+# @file Makefile
 #
-# ## License
+# UEFI firmware build targets for the ODP QEMU SBSA Platform
 #
 # Copyright (c) Microsoft Corporation.
-#
 # SPDX-License-Identifier: Apache-2.0
 
 

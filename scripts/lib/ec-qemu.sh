@@ -1,8 +1,13 @@
 # shellcheck shell=bash
+# @file ec-qemu.sh
+#
 # Sourceable library — provides start_ec_qemu and discover_ec_pty.
 # Do not execute directly.
 #
 # Required on PATH: qemu-system-riscv32, defmt-print, stdbuf, setsid, timeout
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: Apache-2.0
 #
 # Functions intentionally assign EC_PID in the *caller's* shell scope
 # (no `local`) so the orchestrator's cleanup trap can reach the EC's

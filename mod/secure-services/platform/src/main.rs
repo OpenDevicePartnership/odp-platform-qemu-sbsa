@@ -1,5 +1,9 @@
-// This project is dual-licensed under Apache 2.0 and MIT terms.
-// See LICENSE-APACHE and LICENSE-MIT for details.
+//! @file main.rs
+//!
+//! QEMU EC Secure Partition Service entry point
+//!
+//! Copyright (c) Microsoft Corporation.
+//! SPDX-License-Identifier: Apache-2.0
 
 #![cfg_attr(target_os = "none", no_std)]
 #![cfg_attr(target_os = "none", no_main)]

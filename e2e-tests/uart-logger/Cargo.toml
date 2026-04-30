@@ -1,3 +1,10 @@
+# @file Cargo.toml
+#
+# Cargo package manifest for the UART logger library
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: Apache-2.0
+
 [package]
 name = "uart-logger"
 version = "0.1.0"

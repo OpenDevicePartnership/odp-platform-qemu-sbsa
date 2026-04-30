@@ -1,7 +1,8 @@
+# @file Dockerfile
 #
-#  Dockerfile for building/testing Project MU with GCC.
+#  Dockerfile for building/testing the ODP QEMU SBSA Platform with GCC.
 #
-#  Copyright (c) Microsoft Corporation
+#  Copyright (c) Microsoft Corporation.
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 

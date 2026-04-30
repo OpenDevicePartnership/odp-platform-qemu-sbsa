@@ -1,3 +1,10 @@
+# @file startup.nsh
+#
+# UEFI shell startup script for E2E tests
+#
+# Copyright (c) Microsoft Corporation.
+# SPDX-License-Identifier: Apache-2.0
+
 @echo -off
 for %a in fs4 fs3 fs2 fs1 fs0
   if exist %a:\thermal.efi then
