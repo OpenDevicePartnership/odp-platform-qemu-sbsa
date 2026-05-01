@@ -2,6 +2,9 @@
 This document will guide you through getting everything set up to run the ODP tui app inside a WinVOS image
 running on top of QEMU SBSA which communicates with an external NXP RT685-EVK board over a serial connection.
 
+**NOTE**: It is highly recommended that you use a x64 host machine for running this demo.
+The demo requires USB passthrough to WSL which can be very buggy on ARM64 machines and not guaranteed to work correctly.
+
 ## EC Setup
 Please see [odp-embedded-controller/winhec-demo](https://github.com/kurtjd/odp-embedded-controller/blob/winhec-demo/platform/winhec-demo/README.md) for instructions on how to get the IMXRT board set up to act as the EC. 
 
