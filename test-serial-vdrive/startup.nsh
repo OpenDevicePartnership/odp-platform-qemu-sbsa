@@ -1,9 +1,7 @@
-# @file startup.nsh
+# UEFI shell startup script for the serial-link smoke test.
 #
-# UEFI shell startup script for serial-link smoke test
+# SPDX-License-Identifier: MIT
 #
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
 
 @echo -off
 echo test-serial: SBSA reached UEFI shell, requesting shutdown

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# @file dc-run.sh
-#
 # Dispatch a command inside or outside the devcontainer.
+#
+# SPDX-License-Identifier: MIT
+#
 #
 # Usage:
 #   scripts/dc-run.sh [-w <workdir>] -- <command> [args...]
@@ -23,9 +24,6 @@
 #
 # Argv is preserved end-to-end (no shell parsing). For multi-step shell
 # logic (e.g. piping, &&), pass `bash -c '...'` explicitly.
-#
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
 
 set -euo pipefail
 

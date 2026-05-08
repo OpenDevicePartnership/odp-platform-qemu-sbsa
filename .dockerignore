@@ -1,3 +1,8 @@
+# Build context exclusions for the devcontainer Docker build.
+#
+# SPDX-License-Identifier: MIT
+#
+
 .git
 .github
 .vscode

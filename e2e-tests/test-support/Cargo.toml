@@ -1,9 +1,7 @@
-# @file Cargo.toml
+# Cargo package manifest for shared E2E test support utilities.
 #
-# Cargo package manifest for shared E2E test support utilities
+# SPDX-License-Identifier: MIT
 #
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
 
 [package]
 name = "test-support"

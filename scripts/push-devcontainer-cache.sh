@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# @file push-devcontainer-cache.sh
+# Rebuilds and pushes the devcontainer image cache to GHCR using the devcontainer CLI.
 #
-# push-devcontainer-cache.sh
+# SPDX-License-Identifier: MIT
+#
 #
 # Rebuilds and pushes the devcontainer image cache to GHCR using the
 # devcontainer CLI. This ensures the pushed cache uses the same Dockerfile
@@ -28,9 +29,6 @@
 #   ./scripts/push-devcontainer-cache.sh [IMAGE_NAME]
 #
 # IMAGE_NAME defaults to ghcr.io/<gh-user>/odp-platform-qemu-sbsa-devcontainer.
-#
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
 
 set -euo pipefail
 

@@ -1,9 +1,7 @@
-# @file Cargo.toml
+# Cargo package manifest for the TPM E2E test application.
 #
-# Cargo package manifest for the TPM E2E test application
+# SPDX-License-Identifier: MIT
 #
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
 
 [package]
 name = "tpm"

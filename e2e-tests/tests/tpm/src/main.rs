@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
-// SPDX-License-Identifier: Apache-2.0
-
 //! E2E tests for the TPM service via FF-A Direct Request v2.
+//!
+//! SPDX-License-Identifier: MIT
 //!
 //! Exercises the TPM service's opcode routing, parameter validation,
 //! state-machine enforcement, and access control by sending various

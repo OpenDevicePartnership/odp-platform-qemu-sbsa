@@ -1,12 +1,7 @@
-# @file check-submodules.yml
+# Verifies that all submodule URLs in .gitmodules point to the official OpenDevicePartnership org.
 #
-# Verify that all submodule URLs in .gitmodules point to the official OpenDevicePartnership org. This prevents merging
-# a PR that still references a personal fork (used during development).
+# SPDX-License-Identifier: MIT
 #
-##
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
-##
 
 name: Check submodule URLs
 

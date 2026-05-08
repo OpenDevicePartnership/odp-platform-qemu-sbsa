@@ -1,9 +1,7 @@
-//! @file build.rs
+//! Build script for the QEMU EC Secure Partition Service.
 //!
-//! Build script for the QEMU EC Secure Partition Service
+//! SPDX-License-Identifier: MIT
 //!
-//! Copyright (c) Microsoft Corporation.
-//! SPDX-License-Identifier: Apache-2.0
 
 fn main() {
     if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "none" {

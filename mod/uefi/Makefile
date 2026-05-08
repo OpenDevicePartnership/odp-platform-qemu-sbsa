@@ -1,9 +1,7 @@
-# @file Makefile
+# UEFI firmware build targets for the ODP QEMU SBSA Platform.
 #
-# UEFI firmware build targets for the ODP QEMU SBSA Platform
+# SPDX-License-Identifier: MIT
 #
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
 
 
 include ../../Common.mk

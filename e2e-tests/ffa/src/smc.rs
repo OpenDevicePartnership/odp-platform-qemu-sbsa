@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
-// SPDX-License-Identifier: Apache-2.0
-
 //! Raw SMC #0 helper.
+//!
+//! SPDX-License-Identifier: MIT
 //!
 //! TODO(odp-ffa): Remove once `odp_ffa::smc` is public or all needed
 //! FF-A calls are implemented as `Function` impls upstream.

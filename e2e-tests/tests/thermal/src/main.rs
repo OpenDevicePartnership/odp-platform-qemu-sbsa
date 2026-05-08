@@ -1,7 +1,7 @@
-// Copyright (c) Microsoft Corporation.
-// SPDX-License-Identifier: Apache-2.0
-
 //! E2E test: Thermal service get_temperature via FF-A Direct Request v2.
+//!
+//! SPDX-License-Identifier: MIT
+//!
 
 #![no_main]
 #![no_std]

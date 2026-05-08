@@ -1,9 +1,7 @@
-# @file Cargo.toml
+# Cargo package manifest for the FFA (Firmware Framework for Arm) helper library.
 #
-# Cargo package manifest for the FFA (Firmware Framework for Arm) helper library
+# SPDX-License-Identifier: MIT
 #
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
 
 [package]
 name = "ffa"

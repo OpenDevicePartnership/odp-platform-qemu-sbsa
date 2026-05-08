@@ -1,9 +1,7 @@
-# @file config.toml
+# Cargo build configuration for the E2E test suite.
 #
-# Cargo build configuration for the E2E test suite
+# SPDX-License-Identifier: MIT
 #
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
 
 [build]
 target = "aarch64-unknown-uefi"

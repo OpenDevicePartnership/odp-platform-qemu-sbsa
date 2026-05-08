@@ -1,7 +1,9 @@
 # odp-platform-qemu-sbsa
+
 This repo contains all the necessary content for working on QEMU for SBSA (arm64) platform
 
 ## Quick Start Guide
+
 This configuration has been tested on a windows running WSL Ubuntu 24.04 with Visual Studio Code.
 
 After cloning the repository locally to WSL make sure from Visual Studio Code you have the WSL extension

@@ -1,7 +1,7 @@
-# Coverage plugin — builds libcoverage.so (QEMU TCG plugin)
+# Coverage plugin — builds libcoverage.so (QEMU TCG plugin).
 #
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
+#
 
 CC ?= gcc
 CFLAGS := -O2 -Wall -Wextra -shared -fPIC -fvisibility=hidden

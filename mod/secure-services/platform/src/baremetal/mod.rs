@@ -1,9 +1,7 @@
-//! @file mod.rs
+//! Baremetal platform support module for the QEMU EC Secure Partition.
 //!
-//! Baremetal platform support module for the QEMU EC Secure Partition
+//! SPDX-License-Identifier: MIT
 //!
-//! Copyright (c) Microsoft Corporation.
-//! SPDX-License-Identifier: Apache-2.0
 
 mod interrupt;
 mod panic;

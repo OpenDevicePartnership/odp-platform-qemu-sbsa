@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
-// SPDX-License-Identifier: Apache-2.0
-
 //! TODO(odp-ffa): FFA_PARTITION_INFO_GET_REGS implementation.
+//!
+//! SPDX-License-Identifier: MIT
 //!
 //! This should be upstreamed into the `odp-ffa` crate as a proper `Function`
 //! impl, similar to `Version`, `IdGet`, etc. For now we implement it here

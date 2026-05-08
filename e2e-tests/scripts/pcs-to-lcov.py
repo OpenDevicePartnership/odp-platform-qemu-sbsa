@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Convert a list of executed program counters to lcov tracefile format.
+#
+# SPDX-License-Identifier: MIT
+#
 """Convert a list of executed program counters to lcov tracefile format.
 
 Extracts ALL instruction addresses from the SP ELF (via llvm-objdump),
@@ -9,9 +13,6 @@ executed show as DA:line,0.
 
 Usage:
     pcs-to-lcov.py --elf <SP_ELF> --input <coverage.log> --output <coverage.info>
-
-Copyright (c) Microsoft Corporation.
-SPDX-License-Identifier: Apache-2.0
 """
 
 import argparse

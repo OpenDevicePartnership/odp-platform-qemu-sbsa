@@ -1,3 +1,8 @@
+# Ignore runtime UEFI shell logs in the FAT vdrive; only startup.nsh is tracked.
+#
+# SPDX-License-Identifier: MIT
+#
+
 # UEFI shell writes logs to the FAT vdrive at runtime; only startup.nsh is tracked
 *
 !.gitignore

@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation.
-// SPDX-License-Identifier: Apache-2.0
+//! Shared E2E test support utilities for FF-A based UEFI tests.
+//!
+//! SPDX-License-Identifier: MIT
+//!
 
 #![no_std]
 

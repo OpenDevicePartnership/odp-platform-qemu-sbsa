@@ -1,13 +1,10 @@
 # shellcheck shell=bash
-# @file swtpm.sh
+# Sourceable library — provides start_swtpm and wait_for_swtpm_socket (do not execute directly).
 #
-# Sourceable library — provides start_swtpm and wait_for_swtpm_socket.
-# Do not execute directly.
+# SPDX-License-Identifier: MIT
+#
 #
 # Required on PATH: swtpm
-#
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
 #
 # Functions intentionally assign SWTPM_PID in the *caller's* shell scope
 # (no `local`) so the orchestrator's cleanup trap can reach it.

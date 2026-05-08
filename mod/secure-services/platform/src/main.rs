@@ -1,9 +1,7 @@
-//! @file main.rs
+//! QEMU EC Secure Partition Service entry point.
 //!
-//! QEMU EC Secure Partition Service entry point
+//! SPDX-License-Identifier: MIT
 //!
-//! Copyright (c) Microsoft Corporation.
-//! SPDX-License-Identifier: Apache-2.0
 
 #![cfg_attr(target_os = "none", no_std)]
 #![cfg_attr(target_os = "none", no_main)]

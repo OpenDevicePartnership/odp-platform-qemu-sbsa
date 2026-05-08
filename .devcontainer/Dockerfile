@@ -1,9 +1,6 @@
-# @file Dockerfile
+# Dockerfile for building/testing the ODP QEMU SBSA Platform with GCC.
 #
-#  Dockerfile for building/testing the ODP QEMU SBSA Platform with GCC.
-#
-#  Copyright (c) Microsoft Corporation.
-#  SPDX-License-Identifier: BSD-2-Clause-Patent
+# SPDX-License-Identifier: MIT
 #
 
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
@@ -128,12 +125,12 @@ ENV RUSTC_WRAPPER="sccache"
 # Note: only gcc is installed (not g++), so we only wrap what exists.
 RUN mkdir -p /usr/local/lib/sccache && \
     for tool in gcc cc; do \
-        printf '#!/bin/sh\nexec sccache /usr/bin/aarch64-linux-gnu-%s "$@"\n' "$tool" \
-            > /usr/local/lib/sccache/aarch64-linux-gnu-$tool && \
-        chmod +x /usr/local/lib/sccache/aarch64-linux-gnu-$tool; \
+    printf '#!/bin/sh\nexec sccache /usr/bin/aarch64-linux-gnu-%s "$@"\n' "$tool" \
+    > /usr/local/lib/sccache/aarch64-linux-gnu-$tool && \
+    chmod +x /usr/local/lib/sccache/aarch64-linux-gnu-$tool; \
     done && \
     for tool in gcc-ar gcc-nm gcc-ranlib objcopy objdump ld as strip readelf ar ranlib nm; do \
-        ln -sf /usr/bin/aarch64-linux-gnu-$tool /usr/local/lib/sccache/aarch64-linux-gnu-$tool 2>/dev/null || true; \
+    ln -sf /usr/bin/aarch64-linux-gnu-$tool /usr/local/lib/sccache/aarch64-linux-gnu-$tool 2>/dev/null || true; \
     done
 ENV GCC5_AARCH64_PREFIX=/usr/local/lib/sccache/aarch64-linux-gnu-
 ENV PATH="/usr/local/lib/sccache:$PATH"

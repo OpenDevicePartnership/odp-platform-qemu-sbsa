@@ -1,22 +1,19 @@
-/*
- * QEMU TCG Coverage Plugin
- *
- * Records unique instruction program counters (PCs) executed within a
- * configurable address range. Designed for collecting code coverage of
- * the EC Secure Partition during e2e tests.
- *
- * Uses a lock-free bitmap: each bit represents one 4-byte AArch64
- * instruction. Bits are set atomically via __atomic_fetch_or so no
- * mutex is needed even with multiple vCPUs.
- *
- * Plugin arguments (comma-separated in -plugin):
- *   range_lo=0x...   start of monitored range (default: 0x20802000)
- *   range_hi=0x...   end of monitored range   (default: 0x21002000)
- *   outfile=<path>   output file for PCs       (default: Build/coverage.log)
- *
- * Copyright (c) Microsoft Corporation.
- * SPDX-License-Identifier: Apache-2.0
- */
+// QEMU TCG coverage plugin: records executed PCs in a configurable range to a bitmap.
+//
+// SPDX-License-Identifier: MIT
+//
+// Records unique instruction program counters (PCs) executed within a
+// configurable address range. Designed for collecting code coverage of
+// the EC Secure Partition during e2e tests.
+//
+// Uses a lock-free bitmap: each bit represents one 4-byte AArch64
+// instruction. Bits are set atomically via __atomic_fetch_or so no
+// mutex is needed even with multiple vCPUs.
+//
+// Plugin arguments (comma-separated in -plugin):
+//   range_lo=0x...   start of monitored range (default: 0x20802000)
+//   range_hi=0x...   end of monitored range   (default: 0x21002000)
+//   outfile=<path>   output file for PCs       (default: Build/coverage.log)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,10 +55,12 @@ static void tb_trans(qemu_plugin_id_t id, struct qemu_plugin_tb *tb)
 {
     (void)id;
     size_t n = qemu_plugin_tb_n_insns(tb);
-    for (size_t i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++)
+    {
         struct qemu_plugin_insn *insn = qemu_plugin_tb_get_insn(tb, i);
         uint64_t vaddr = qemu_plugin_insn_vaddr(insn);
-        if (vaddr >= range_lo && vaddr < range_hi) {
+        if (vaddr >= range_lo && vaddr < range_hi)
+        {
             qemu_plugin_register_vcpu_insn_exec_cb(
                 insn, insn_exec, QEMU_PLUGIN_CB_NO_REGS,
                 (void *)(uintptr_t)vaddr);
@@ -76,15 +75,18 @@ static void plugin_atexit(qemu_plugin_id_t id, void *userdata)
     (void)userdata;
 
     FILE *f = fopen(outfile, "w");
-    if (!f) {
+    if (!f)
+    {
         fprintf(stderr, "coverage plugin: cannot open %s\n", outfile);
         return;
     }
 
     size_t count = 0;
     uint64_t max_idx = (range_hi - range_lo) >> 2;
-    for (uint64_t idx = 0; idx < max_idx; idx++) {
-        if (bitmap[idx >> 3] & (1u << (idx & 7))) {
+    for (uint64_t idx = 0; idx < max_idx; idx++)
+    {
+        if (bitmap[idx >> 3] & (1u << (idx & 7)))
+        {
             fprintf(f, "0x%" PRIx64 "\n", range_lo + (idx << 2));
             count++;
         }
@@ -104,12 +106,13 @@ static int parse_u64(const char *s, uint64_t *out)
 }
 
 QEMU_PLUGIN_EXPORT int qemu_plugin_install(qemu_plugin_id_t id,
-                                            const qemu_info_t *info,
-                                            int argc, char **argv)
+                                           const qemu_info_t *info,
+                                           int argc, char **argv)
 {
     (void)info;
 
-    for (int i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++)
+    {
         const char *arg = argv[i];
         const char *eq = strchr(arg, '=');
         if (!eq)
@@ -118,20 +121,26 @@ QEMU_PLUGIN_EXPORT int qemu_plugin_install(qemu_plugin_id_t id,
         size_t key_len = (size_t)(eq - arg);
 
         if (key_len == strlen("range_lo") &&
-            strncmp(arg, "range_lo", key_len) == 0) {
+            strncmp(arg, "range_lo", key_len) == 0)
+        {
             if (parse_u64(val, &range_lo) != 0)
                 return -1;
-        } else if (key_len == strlen("range_hi") &&
-                   strncmp(arg, "range_hi", key_len) == 0) {
+        }
+        else if (key_len == strlen("range_hi") &&
+                 strncmp(arg, "range_hi", key_len) == 0)
+        {
             if (parse_u64(val, &range_hi) != 0)
                 return -1;
-        } else if (key_len == strlen("outfile") &&
-                   strncmp(arg, "outfile", key_len) == 0) {
+        }
+        else if (key_len == strlen("outfile") &&
+                 strncmp(arg, "outfile", key_len) == 0)
+        {
             outfile = val; /* argv remains valid for plugin lifetime */
         }
     }
 
-    if (range_hi <= range_lo) {
+    if (range_hi <= range_lo)
+    {
         fprintf(stderr,
                 "coverage plugin: invalid range 0x%" PRIx64 "-0x%" PRIx64 "\n",
                 range_lo, range_hi);
@@ -142,7 +151,8 @@ QEMU_PLUGIN_EXPORT int qemu_plugin_install(qemu_plugin_id_t id,
     size_t max_insns = (size_t)(range_size / 4);
     bitmap_bytes = (max_insns + 7) / 8;
     bitmap = calloc(bitmap_bytes, 1);
-    if (!bitmap) {
+    if (!bitmap)
+    {
         fprintf(stderr, "coverage plugin: cannot allocate %zu bytes\n",
                 bitmap_bytes);
         return -1;

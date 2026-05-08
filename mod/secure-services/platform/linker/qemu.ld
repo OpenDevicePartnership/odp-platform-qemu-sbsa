@@ -1,7 +1,7 @@
-/*
- * Copyright (c) Microsoft Corporation.
- * SPDX-License-Identifier: Apache-2.0
- */
+/* QEMU EC Secure Partition linker memory layout. */
+/*                                                */
+/* SPDX-License-Identifier: MIT                   */
+/*                                                */
 
 MEMORY
 {

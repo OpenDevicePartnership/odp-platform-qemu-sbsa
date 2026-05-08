@@ -1,9 +1,7 @@
-//! @file interrupt.rs
+//! QEMU interrupt handler implementation.
 //!
-//! QEMU interrupt handler implementation
+//! SPDX-License-Identifier: MIT
 //!
-//! Copyright (c) Microsoft Corporation.
-//! SPDX-License-Identifier: Apache-2.0
 
 use aarch64_haf::{haf_interrupt_handler_impl, HafInterruptHandler};
 

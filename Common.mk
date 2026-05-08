@@ -1,9 +1,7 @@
-# @file Common.mk
+# Shared variables and targets included by all Makefiles in the ODP QEMU SBSA Platform build system.
 #
-# Shared variables and targets included by all Makefiles in the ODP QEMU SBSA Platform build system
+# SPDX-License-Identifier: MIT
 #
-# Copyright (c) Microsoft Corporation.
-# SPDX-License-Identifier: Apache-2.0
 
 REPO_ROOT_IN_HOST := $(shell realpath $(dir $(lastword $(MAKEFILE_LIST))))
 REPO_ROOT_IN_DEVCONTAINER := /workspaces/$(shell basename $(REPO_ROOT_IN_HOST))

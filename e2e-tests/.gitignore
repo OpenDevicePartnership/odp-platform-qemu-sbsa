@@ -1,1 +1,6 @@
+# Ignore the EDK2/QEMU Build/ output directory under e2e-tests.
+#
+# SPDX-License-Identifier: MIT
+#
+
 Build/

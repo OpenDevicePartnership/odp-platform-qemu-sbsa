@@ -1,7 +1,6 @@
-// Copyright (c) Microsoft Corporation.
-// SPDX-License-Identifier: Apache-2.0
-
 //! Thin wrapper around `odp_ffa` for non-secure world UEFI test applications.
+//!
+//! SPDX-License-Identifier: MIT
 //!
 //! Re-exports the upstream `odp_ffa` crate and adds functionality not yet
 //! implemented there (marked with TODO for future upstreaming).
