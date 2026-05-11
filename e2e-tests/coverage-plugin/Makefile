@@ -1,4 +1,4 @@
-# Coverage plugin — builds libcoverage.so (QEMU TCG plugin).
+# Coverage plugin — builds libcoverage.so (QEMU TCG plugin)
 #
 # SPDX-License-Identifier: MIT
 #

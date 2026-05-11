@@ -1,7 +1,9 @@
-# E2E tests for the EC Secure Partition: builds Rust UEFI test apps and runs them under QEMU.
+# E2E Tests for the EC Secure Partition
 #
 # SPDX-License-Identifier: MIT
 #
+# Builds Rust UEFI test applications, launches QEMU with the existing
+# BIOS firmware, and executes tests against the secure partition.
 
 SHELL := /bin/bash
 

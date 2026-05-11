@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 #
 # Running `cargo build` or `cargo test` here will configure `.husky/` as
-# the git hooks directory via husky-rs's build script. 
+# the git hooks directory via husky-rs's build script.
 #
 # The pre-commit hook checks formatting and runs clippy on the real Rust
 # projects (e2e-tests and secure-services/platform).
