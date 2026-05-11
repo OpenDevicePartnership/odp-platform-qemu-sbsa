@@ -2,7 +2,6 @@
 *  Fixed ACPI Description Table (FADT)
 *
 *  Copyright (c) 2020, Linaro Limited. All rights reserved.
-*  Copyright (c) Microsoft Corporation.
 *
 *  SPDX-License-Identifier: BSD-2-Clause-Patent
 **/

@@ -1,16 +1,9 @@
-# Git submodule registrations for upstream OpenDevicePartnership components.
-#
-# SPDX-License-Identifier: MIT
-#
-
 [submodule "patina-qemu"]
 	path = mod/uefi/patina-qemu
 	url = https://github.com/OpenDevicePartnership/patina-qemu.git
-
 [submodule "odp-secure-services"]
 	path = mod/secure-services/odp-secure-services
 	url = https://github.com/OpenDevicePartnership/odp-secure-services.git
-
 [submodule "odp-embedded-controller"]
 	path = mod/ec
 	url = https://github.com/OpenDevicePartnership/odp-embedded-controller.git

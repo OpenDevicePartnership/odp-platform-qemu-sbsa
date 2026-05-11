@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: MIT
 #
-#
 # Required on PATH: qemu-system-riscv32, defmt-print, stdbuf, setsid, timeout
 #
 # Functions intentionally assign EC_PID in the *caller's* shell scope

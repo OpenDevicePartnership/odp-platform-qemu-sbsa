@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
-# Run the e2e test suite against the secure partition (owns swtpm + SBSA QEMU child processes).
+# Run the e2e test suite against the secure partition
 #
 # SPDX-License-Identifier: MIT
-#
-#
-# scripts/test-e2e.sh — Run the e2e test suite against the secure partition.
 #
 # Owns the long-lived child processes (swtpm + SBSA QEMU), sets up the
 # cleanup trap, and performs post-run verification by parsing the

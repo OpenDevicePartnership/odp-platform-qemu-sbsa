@@ -1,8 +1,3 @@
-/* QEMU EC Secure Partition linker memory layout. */
-/*                                                */
-/* SPDX-License-Identifier: MIT                   */
-/*                                                */
-
 MEMORY
 {
 	image : ORIGIN = 0x20802000, LENGTH = 2M

@@ -1,10 +1,7 @@
-/** @file
-  Thermal zone ACPI device nodes for the QEMU SBSA platform
-
-  Copyright (c) Microsoft Corporation.
-  SPDX-License-Identifier: BSD-2-Clause-Patent
-
-**/
+// FF-A (Firmware Framework for Arm) ACPI device node
+//
+// SPDX-License-Identifier: MIT
+//
 
 // Sample Definition of FAN ACPI
 

@@ -2,7 +2,6 @@
   Contains root level name space objects for the platform
 
   Copyright (c) 2024 - 2025, MediaTek Inc. All rights reserved.<BR>
-  Copyright (c) Microsoft Corporation.
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/

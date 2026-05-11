@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: MIT
 #
-#
 # Required on PATH: swtpm
 #
 # Functions intentionally assign SWTPM_PID in the *caller's* shell scope

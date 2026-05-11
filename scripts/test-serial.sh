@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
-# Orchestrate the EC ↔ SBSA serial-link test (owns swtpm + EC QEMU + SBSA QEMU child processes).
+# Orchestrate the EC ↔ SBSA serial-link test
 #
 # SPDX-License-Identifier: MIT
-#
-#
-# scripts/test-serial.sh — Orchestrate the EC ↔ SBSA serial-link test.
 #
 # Owns the long-lived child processes (swtpm + EC QEMU + SBSA QEMU),
 # sets up the cleanup trap, and performs post-run verification.

@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: MIT
 #
-#
 # Usage:
 #   scripts/dc-run.sh [-w <workdir>] -- <command> [args...]
 #   scripts/dc-run.sh [-w <workdir>] --shell        # interactive bash

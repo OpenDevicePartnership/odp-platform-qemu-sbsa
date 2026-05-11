@@ -1,7 +1,10 @@
-# Build/clean for everything under mod/ (EC, secure-services, UEFI); top-level Makefile delegates here.
+# Build/clean for everything under mod/
 #
 # SPDX-License-Identifier: MIT
 #
+# Keeps mod-specific impl details (EC cargo build, secure-services flavors,
+# double UEFI invocation) out of the top-level Makefile. Top-level delegates
+# with `make -C mod <target>`.
 
 include ../Common.mk
 
