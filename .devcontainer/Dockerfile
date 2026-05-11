@@ -65,8 +65,8 @@ RUN apt-get update && \
 ENV IN_DEVCONTAINER=1
 
 RUN python3 -m venv /opt/venv && \
-    chmod -R g+w,o+w /opt/venv && \
-    /opt/venv/bin/pip install --upgrade pip
+    /opt/venv/bin/pip install --upgrade pip && \
+    chmod -R g+w,o+w /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # RUN npm install -g npm
