@@ -36,7 +36,7 @@ endif
 # Shared across the top-level Makefile, e2e-tests/Makefile, and
 # os-image/Makefile.  Individual targets append pflash drives,
 # serial, display, and any extra device flags.
-BIOS_FV_DIR := mod/uefi/patina-qemu/Build/QemuSbsaPkg/DEBUG_CLANGPDB/FV
+BIOS_FV_DIR := mod/uefi/patina-qemu/Build/QemuArmVirtPkg/DEBUG_CLANGPDB/FV
 
 # Path to the EC firmware binary (relative to repo root). Built by
 # `make -C mod ec`. Top-level recipes (e2e-test) reference it without
@@ -44,12 +44,13 @@ BIOS_FV_DIR := mod/uefi/patina-qemu/Build/QemuSbsaPkg/DEBUG_CLANGPDB/FV
 EC_BINARY := mod/ec/platform/dev-qemu/target/riscv32imac-unknown-none-elf/release/dev-qemu
 
 QEMU_COMMON_ARGS := \
-	-semihosting -cpu max,sve=off,sme=off -smp 4 -machine sbsa-ref \
+	-semihosting -cpu max,sve=off,sme=off -smp 4 \
+	-machine virt,secure=on,virtualization=on,gic-version=3,mte=on,iommu=smmuv3 \
 	-global driver=cfi.pflash01,property=secure,value=on -m 4G \
 	-net none \
 	-smbios type=0,vendor="Patina",version="v1.0.2",date="03/06/2026",uefi=on \
-	-smbios type=1,manufacturer="OpenDevicePartnership",product="QEMU SBSA",family="QEMU",version="10.0.0",serial="42-42-42-42",uuid=99fb60e2-181c-413a-a3cf-0a5fea8d87b0 \
-	-smbios type=3,manufacturer="OpenDevicePartnership",serial="42-42-42-42",asset="SBSA",sku="SBSA",version="" \
+	-smbios type=1,manufacturer="OpenDevicePartnership",product="QEMU VIRT",family="QEMU",version="10.0.0",serial="42-42-42-42",uuid=99fb60e2-181c-413a-a3cf-0a5fea8d87b0 \
+	-smbios type=3,manufacturer="OpenDevicePartnership",serial="42-42-42-42",asset="VIRT",sku="VIRT",version="" \
 	-device qemu-xhci,id=usb -device usb-mouse,id=input0,bus=usb.0,port=1 \
 	-device usb-kbd,id=input1,bus=usb.0,port=2
 
