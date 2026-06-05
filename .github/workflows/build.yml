@@ -14,7 +14,7 @@ on:
 jobs:
   lint:
     name: Rust Lint & Format
-    runs-on: ubuntu-24.04-4core
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -33,7 +33,7 @@ jobs:
 
   devcontainer:
     name: Build Multiplatform Devcontainer
-    runs-on: ubuntu-24.04-4core
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
@@ -80,7 +80,7 @@ jobs:
 
   build-test-bios:
     name: Build & Test QEMU Bios
-    runs-on: ubuntu-24.04-4core
+    runs-on: ubuntu-latest
     env:
       BRANCH_TAG: ${{ github.head_ref && format('{0}', github.head_ref) || github.ref_name }}
     steps:
