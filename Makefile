@@ -5,6 +5,11 @@
 
 include Common.mk
 
+# TPM socket path used by QEMU's emulator TPM backend during `make run`.
+# Override at invocation time if needed, e.g.:
+#   make run TPM_DEV=/tmp/other-swtpm/swtpm-sock
+TPM_DEV ?= /tmp/mytpm1/swtpm-sock
+
 # ------------------------------------------------------------
 # Default target — builds all artifacts (does not run tests).
 # Use `make e2e-test` to run the full test suite (serial-link
@@ -27,15 +32,10 @@ secure-services secure-services-test uefi ec:
 	$(MAKE) -C mod $@
 
 # ------------------------------------------------------------
-# Run QEMU with the built UEFI firmware
+# Run QEMU using UEFI flash-only flow
 # ------------------------------------------------------------
-run: secure-services uefi
-	@$(DC_RUN) -- qemu-system-aarch64 \
-		$(QEMU_COMMON_ARGS) \
-		-drive if=pflash,format=raw,unit=0,file=$(BIOS_FV_DIR)/SECURE_FLASH0.fd \
-		-drive if=pflash,format=raw,unit=1,file=$(BIOS_FV_DIR)/QEMU_EFI.fd,readonly=on \
-		-serial mon:stdio \
-		-display vnc=:1
+run:
+	$(MAKE) -C mod/uefi run TPM_DEV=$(TPM_DEV)
 
 # ------------------------------------------------------------
 # Run E2E tests against the secure partition

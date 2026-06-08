@@ -67,7 +67,37 @@
 			pages-count = <0x100>; /* 1MB of Heap space */
 			attributes = <0x3>;
 		};
-
 	};
 
+	device-regions {
+		compatible = "arm,ffa-manifest-device-regions";
+
+		/* Internal TPM CRB — per-locality shadow registers used by TpmService.
+		 * Placed after the C-based MSSP's internal CRB (0x40200000-0x40205000).
+		 */
+		tpm_internal_crb {
+			description = "internal tpm crb";
+			base-address = <0x00 0x40200000>;
+			pages-count = <0x5>;
+			attributes = <0x3>;
+		};
+
+		/* External TPM CRB — swtpm MMIO registers. */
+		tpm_external_crb {
+			description = "external tpm crb";
+			base-address = <0x0 0x0C000000>;
+			pages-count = <0x5>;
+			attributes = <0x3>;
+		};
+
+		/* EC uart */
+		/*
+		ec_uart {
+			description = "ec uart";
+			base-address = <0x0 0x09040000>;
+			pages-count = <0x1>;
+			attributes = <0x3>;
+		};
+		*/
+	};
 };

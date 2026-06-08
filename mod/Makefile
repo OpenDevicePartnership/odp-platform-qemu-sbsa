@@ -32,7 +32,6 @@ uefi: secure-services uefi-only
 # secure-services-test first and would have it clobbered by the regular dep.
 uefi-only:
 	$(MAKE) -C uefi patina-qemu-ec
-	$(MAKE) -C uefi patina-qemu-ec
 
 # ------------------------------------------------------------
 # EC firmware (RISC-V)
