@@ -42,7 +42,7 @@
 	execution-ctx-count = <1>;
 	exception-level = <2>; /* SEL1*/
 	execution-state = <0>; /* AArch64*/
-	load-address = <0x0 0x20800000>;
+	load-address = <0x0 0xE700000>;
 	entrypoint-offset = <0x2000>;
 	image-size = <0x0 0x50000>;
 	xlat-granule = <0>; /* 4KiB */
@@ -63,52 +63,11 @@
 		// Heap used by RUST code in SP
 		heap {
 			description = "heap";
-			base-address = <0x0 0x20900000>;
+			base-address = <0x0 0xE800000>;
 			pages-count = <0x100>; /* 1MB of Heap space */
 			attributes = <0x3>;
 		};
 
-		/*
-		 * Memory shared between Normal world and S-EL0.
-		 * Similar to ARM_SP_IMAGE_NS_BUF_MMAP.
-		 */
-		ns_comm_buffer {
-			description = "ns-comm";
-			base-address = <0x00000100 0x60000000>;
-			pages-count = <0x800>;
-			attributes = <0xB>;
-		};
-
-	};
-
-	device-regions {
-		compatible = "arm,ffa-manifest-device-regions";
-
-		/* Internal TPM CRB — per-locality shadow registers used by TpmService.
-		 * Placed after the C-based MSSP's internal CRB (0x10000200000-0x10000210000).
-		 */
-		tpm_internal_crb {
-			description = "internal tpm crb";
-			base-address = <0x00000100 0x00210000>;
-			pages-count = <0x10>;
-			attributes = <0x3>;
-		};
-
-		/* External TPM CRB — swtpm MMIO registers. */
-		tpm_external_crb {
-			description = "external tpm crb";
-			base-address = <0x0 0x60120000>;
-			pages-count = <0x10>;
-			attributes = <0x3>;
-		};
-
-		/* EC uart */
-		ec_uart {
-			description = "ec uart";
-			base-address = <0x0 0x60030000>;
-			pages-count = <0x1>;
-			attributes = <0x3>;
-		};
 	};
 
 };

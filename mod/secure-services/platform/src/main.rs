@@ -16,14 +16,9 @@ fn main() {
     println!("qemu-sp stub");
 }
 
-/// TPM CRB MMIO base address.
-///
-/// Must match the device-region mapping in the SP manifest (`qemu-ec-sp.dts`).
-#[cfg(target_os = "none")]
-const TPM_CRB_MMIO_BASE: u64 = 0x10000210000;
-
 #[cfg(target_os = "none")]
 fn main() -> ! {
+    use ec_service_lib::services::TpmServiceStub;
     use ec_service_lib::MessageHandler;
     use odp_ffa::Function;
 
@@ -32,13 +27,7 @@ fn main() -> ! {
     let version = odp_ffa::Version::new().exec().unwrap();
     log::info!("FFA version: {}.{}", version.major(), version.minor());
 
-    let tpm_sst = ec_service_lib::services::TpmSst::new();
-    let mut tpm = ec_service_lib::services::TpmService::new(tpm_sst);
-
-    // SAFETY: TPM_CRB_MMIO_BASE is mapped as a device region in the SP manifest (qemu-ec-sp.dts).
-    unsafe {
-        tpm.init(TPM_CRB_MMIO_BASE);
-    }
+    let tpm = TpmServiceStub::new();
 
     MessageHandler::new()
         .append(ec_service_lib::services::Thermal::new())
