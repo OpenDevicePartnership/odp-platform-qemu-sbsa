@@ -6,7 +6,7 @@
 
 include ../../Common.mk
 
-# TPM is enabled for the QEMU Arm Virt EC build by default. Callers can
+# TPM is enabled for the QEMU ARM VIRT build by default. Callers can
 # override TPM_DEV at invocation time, e.g. `make run TPM_DEV=/tmp/swtpm.sock`.
 TPM_DEV ?= /tmp/mytpm1/swtpm-sock
 
@@ -44,7 +44,7 @@ builder-shell: builder-image
 
 run: builder-image
 	@$(DC_RUN) -w mod/uefi/patina-qemu -- \
-		stuart_build -c Platforms/QemuArmVirtPkg/PlatformBuild.py --flashonly GDB_SERVER=5555 SERIAL_PORT=56789 TPM_DEV=$(TPM_DEV)
+		stuart_build -c Platforms/QemuArmVirtPkg/PlatformBuild.py --flashonly GDB_SERVER=5555 SERIAL_PORT=56789 TPM_DEV=$(TPM_DEV) PATH_TO_OS=$(PATH_TO_OS)
 
 clean:
 	@echo "=== Cleaning UEFI build artifacts ==="
