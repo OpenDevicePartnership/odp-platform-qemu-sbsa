@@ -35,6 +35,7 @@ secure-services secure-services-test uefi ec:
 # Run QEMU using UEFI flash-only flow
 # ------------------------------------------------------------
 run:
+	@mkdir -p "$(dir $(TPM_DEV))"
 	$(MAKE) -C mod/uefi run TPM_DEV=$(TPM_DEV)
 
 # ------------------------------------------------------------

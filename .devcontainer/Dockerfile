@@ -33,6 +33,8 @@ RUN apt-get update && \
     clang \
     curl \
     device-tree-compiler \
+    dosfstools \
+    mtools \
     flex \
     git \
     gnupg \
