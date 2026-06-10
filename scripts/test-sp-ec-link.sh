@@ -6,7 +6,7 @@
 # Owns the long-lived child processes (swtpm + EC QEMU + SBSA QEMU),
 # sets up the cleanup trap, and performs post-run verification.
 #
-# Run `test-serial.sh --help` for usage. Must be executed inside the
+# Run `test-sp-ec-link.sh --help` for usage. Must be executed inside the
 # odp-platform-qemu-sbsa devcontainer (requires swtpm, qemu-system-riscv32,
 # qemu-system-aarch64, defmt-print, stdbuf, setsid, timeout, pkill on PATH).
 
@@ -19,10 +19,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/swtpm.sh"
 # shellcheck source=lib/ec-qemu.sh
 source "$SCRIPT_DIR/lib/ec-qemu.sh"
+# shellcheck source=lib/sbsa-qemu.sh
+source "$SCRIPT_DIR/lib/sbsa-qemu.sh"
 
 usage() {
     cat <<'EOF'
-Usage: test-serial.sh --ec-elf PATH --bios-fv-dir DIR --build-dir DIR \
+Usage: test-sp-ec-link.sh --ec-elf PATH --bios-fv-dir DIR --build-dir DIR \
                       [--ec-timeout N] [--sbsa-timeout N] -- <qemu-common-args...>
 
   --ec-elf        EC firmware ELF (riscv32)
@@ -97,32 +99,13 @@ SBSA_SERIAL_LOG="$BUILD_DIR/sbsa-serial-output.log"
 EC_PID=""
 SWTPM_PID=""
 
-# Tear down the EC session (no-op if EC_PID is unset).
-#
-# EC_PID is the session leader of a session created by `setsid` (in
-# ec-qemu.sh). Bash auto-enables job control for session-leader children,
-# which puts each pipeline stage (timeout/tee/defmt-print) in its OWN
-# process group inside the session — so a single `kill -- -$EC_PID` only
-# signals the leader's own pgrp and leaks `timeout` + `qemu-system-riscv32`.
-# Signal the whole session via `pkill -s` so every descendant process group
-# is reached, then `kill -- -$EC_PID` as a belt-and-braces fallback.
-kill_ec_session() {
-    [ -n "$EC_PID" ] || return 0
-    pkill -TERM -s "$EC_PID" 2>/dev/null
-    kill -- "-$EC_PID" 2>/dev/null
-    wait "$EC_PID" 2>/dev/null
-}
-
 # shellcheck disable=SC2329  # invoked via `trap ... EXIT` below
 cleanup() {
     # SC2317: invoked via `trap ... EXIT`, not statically reachable.
     # shellcheck disable=SC2317
     kill_ec_session
     # shellcheck disable=SC2317
-    if [ -n "$SWTPM_PID" ]; then
-        kill "$SWTPM_PID" 2>/dev/null
-        wait "$SWTPM_PID" 2>/dev/null
-    fi
+    kill_swtpm
     # shellcheck disable=SC2317
     true
 }
@@ -134,9 +117,7 @@ rm -f "$EC_OUT_LOG" "$EC_ERR_LOG" "$EC_SERIAL_LOG" "$SBSA_SERIAL_LOG" "$SWTPM_SO
 # 1. swtpm
 start_swtpm "$SWTPM_STATE" "$SWTPM_SOCK" "$SWTPM_LOG"
 wait_for_swtpm_socket "$SWTPM_SOCK" || {
-    echo "--- swtpm log ($SWTPM_LOG) ---" >&2
-    cat "$SWTPM_LOG" >&2 2>/dev/null || echo "(empty or missing)" >&2
-    echo "--- end swtpm log ---" >&2
+    dump_swtpm_log_on_failure "$SWTPM_LOG"
     exit 1
 }
 
@@ -146,22 +127,21 @@ PTY=$(discover_ec_pty "$EC_OUT_LOG" "$EC_ERR_LOG") || exit 1
 echo "EC PTY: $PTY — launching SBSA QEMU"
 
 # 3. SBSA QEMU
+set_sbsa_pflash_tpm_args "$BIOS_FV_DIR" "$SWTPM_SOCK"
+
+QEMU_ARGS=(
+    "$@"
+    "${SBSA_PFLASH_TPM_ARGS[@]}"
+    -chardev "serial,id=ec-link,path=$PTY"
+    -serial "file:$SBSA_SERIAL_LOG"
+    -serial "chardev:ec-link"
+    -drive "file=fat:rw:test-serial-vdrive,format=raw,media=disk"
+    -display none
+    -no-reboot
+)
+
 SBSA_EXIT=0
-timeout "$SBSA_TIMEOUT" \
-    qemu-system-aarch64 \
-        "$@" \
-        -drive "if=pflash,format=raw,unit=0,file=$BIOS_FV_DIR/SECURE_FLASH0.fd" \
-        -drive "if=pflash,format=raw,unit=1,file=$BIOS_FV_DIR/QEMU_EFI.fd,readonly=on" \
-        -chardev "socket,id=chrtpm,path=$SWTPM_SOCK" \
-        -tpmdev "emulator,id=tpm0,chardev=chrtpm" \
-        -device "tpm-tis-device,tpmdev=tpm0" \
-        -chardev "serial,id=ec-link,path=$PTY" \
-        -serial "file:$SBSA_SERIAL_LOG" \
-        -serial "chardev:ec-link" \
-        -drive "file=fat:rw:test-serial-vdrive,format=raw,media=disk" \
-        -display none \
-        -no-reboot \
-    || SBSA_EXIT=$?
+timeout "$SBSA_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" || SBSA_EXIT=$?
 
 # 4. SBSA failure short-circuits before verification (matches original recipe).
 if [ "$SBSA_EXIT" -ne 0 ]; then

@@ -7,7 +7,7 @@
 # cleanup trap, and performs post-run verification by parsing the
 # captured serial log.
 #
-# Run `test-e2e.sh --help` for usage. Must be executed inside the
+# Run `test-sp-services.sh --help` for usage. Must be executed inside the
 # odp-platform-qemu-sbsa devcontainer (requires swtpm, qemu-system-aarch64,
 # timeout, tee on PATH).
 
@@ -19,19 +19,21 @@ set -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/swtpm.sh
 source "$SCRIPT_DIR/lib/swtpm.sh"
+# shellcheck source=lib/sbsa-qemu.sh
+source "$SCRIPT_DIR/lib/sbsa-qemu.sh"
 
 usage() {
     cat <<'EOF'
-Usage: test-e2e.sh --bios-fv-dir DIR --build-dir DIR --vdrive-dir DIR \
-                   --coverage-plugin PATH --coverage-log PATH \
-                   [--qemu-timeout N] [--serial-tee 0|1] -- <qemu-common-args...>
+Usage: test-sp-services.sh --bios-fv-dir DIR --build-dir DIR --vdrive-dir DIR \
+                           --coverage-plugin PATH --coverage-log PATH \
+                           [--sbsa-timeout N] [--serial-tee 0|1] -- <qemu-common-args...>
 
   --bios-fv-dir      Directory containing SECURE_FLASH0.fd and QEMU_EFI.fd
   --build-dir        Build/ directory (test-output.log, swtpm state, etc. live here)
   --vdrive-dir       FAT drive directory exposed to UEFI shell (test EFIs + startup.nsh)
   --coverage-plugin  Path to TCG coverage plugin (.so)
   --coverage-log     Path to write QEMU coverage PC trace
-  --qemu-timeout     Seconds for QEMU run (default: 180)
+  --sbsa-timeout     Seconds for SBSA QEMU run (default: 180)
   --serial-tee       1 = tee QEMU serial to stdout AND file; 0 = file only (default: 0)
 
 After --, all remaining args are passed verbatim to qemu-system-aarch64
@@ -49,7 +51,7 @@ BUILD_DIR=""
 VDRIVE_DIR=""
 COVERAGE_PLUGIN=""
 COVERAGE_LOG=""
-QEMU_TIMEOUT=180
+SBSA_TIMEOUT=180
 SERIAL_TEE=0
 
 while [[ $# -gt 0 ]]; do
@@ -59,7 +61,7 @@ while [[ $# -gt 0 ]]; do
         --vdrive-dir)      VDRIVE_DIR="$2";      shift 2 ;;
         --coverage-plugin) COVERAGE_PLUGIN="$2"; shift 2 ;;
         --coverage-log)    COVERAGE_LOG="$2";    shift 2 ;;
-        --qemu-timeout)    QEMU_TIMEOUT="$2";    shift 2 ;;
+        --sbsa-timeout)    SBSA_TIMEOUT="$2";    shift 2 ;;
         --serial-tee)      SERIAL_TEE="$2";      shift 2 ;;
         --help|-h)         usage; exit 0 ;;
         --)                shift; break ;;
@@ -78,8 +80,6 @@ done
 QEMU_COMMON_ARGS=("$@")
 
 # ----- paths -----
-SECURE_FLASH0="$BIOS_FV_DIR/SECURE_FLASH0.fd"
-QEMU_EFI="$BIOS_FV_DIR/QEMU_EFI.fd"
 SWTPM_DIR="$BUILD_DIR/tpm"
 SWTPM_SOCK="$SWTPM_DIR/swtpm-sock"
 SWTPM_LOG="$BUILD_DIR/swtpm.log"
@@ -100,32 +100,30 @@ fi
 cleanup() {
     local sig=$?
     [ -n "${QEMU_PID:-}" ] && kill "$QEMU_PID" 2>/dev/null
-    [ -n "${SWTPM_PID:-}" ] && kill "$SWTPM_PID" 2>/dev/null
+    kill_swtpm
     wait 2>/dev/null
     exit "$sig"
 }
 trap cleanup EXIT INT TERM
 
 # ----- QEMU launch -----
+set_sbsa_pflash_tpm_args "$BIOS_FV_DIR" "$SWTPM_SOCK"
+
 QEMU_ARGS=(
     "${QEMU_COMMON_ARGS[@]}"
     -plugin "file=$COVERAGE_PLUGIN,outfile=$COVERAGE_LOG"
-    -drive "if=pflash,format=raw,unit=0,file=$SECURE_FLASH0"
-    -drive "if=pflash,format=raw,unit=1,file=$QEMU_EFI,readonly=on"
-    -chardev "socket,id=chrtpm,path=$SWTPM_SOCK"
-    -tpmdev "emulator,id=tpm0,chardev=chrtpm"
-    -device "tpm-tis-device,tpmdev=tpm0"
+    "${SBSA_PFLASH_TPM_ARGS[@]}"
     -drive "file=fat:rw:$VDRIVE_DIR,format=raw,media=disk"
     -display none
     -no-reboot
 )
 
 if [ "$SERIAL_TEE" = "1" ]; then
-    timeout "$QEMU_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" -serial stdio 2>&1 \
+    timeout "$SBSA_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" -serial stdio 2>&1 \
         | tee "$TEST_OUTPUT" &
     QEMU_PID=$!
 else
-    timeout "$QEMU_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" \
+    timeout "$SBSA_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" \
         -serial "file:$TEST_OUTPUT" &
     QEMU_PID=$!
 fi
@@ -135,8 +133,7 @@ QEMU_EXIT=$?
 echo "$QEMU_EXIT" > "$QEMU_EXIT_FILE"
 
 # Stop swtpm before result analysis (frees the socket).
-kill "$SWTPM_PID" 2>/dev/null
-wait "$SWTPM_PID" 2>/dev/null
+kill_swtpm
 
 # ----- result analysis -----
 echo "=== Test output summary ==="

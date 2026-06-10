@@ -49,10 +49,10 @@ run:
 # Order matters: phase 2 clobbers the default secure-services binary,
 # so the serial-link test must run first.
 e2e-test: ec uefi
-	$(MAKE) -C e2e-tests test-serial
+	$(MAKE) -C e2e-tests test-sp-ec-link
 	$(MAKE) -C mod secure-services-test
 	$(MAKE) -C mod uefi-only
-	$(MAKE) -C e2e-tests test
+	$(MAKE) -C e2e-tests test-sp-services
 
 # ------------------------------------------------------------
 # Clean everything

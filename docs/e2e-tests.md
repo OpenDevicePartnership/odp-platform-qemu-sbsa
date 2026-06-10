@@ -91,7 +91,7 @@ The UEFI Shell finds the FAT drive, executes `startup.nsh`, which launches
 
 ### 5. Result Collection
 
-The `make test` target wraps QEMU execution with `timeout`, captures serial
+The `make test-sp-services` target wraps QEMU execution with `timeout`, captures serial
 output to `Build/test-output.log`, then greps for `[PASS]`/`[FAIL]` lines
 to determine the overall result.
 
@@ -145,7 +145,7 @@ For the Thermal `get_temperature` command specifically:
 make -C e2e-tests build
 
 # Run with timeout + pass/fail reporting (for CI)
-make -C e2e-tests test
+make -C e2e-tests test-sp-services
 
 # Full pipeline: build everything then run tests
 make e2e-test
@@ -156,7 +156,7 @@ make e2e-test
 The default QEMU timeout is 180 seconds. Override with:
 
 ```bash
-make -C e2e-tests test QEMU_TIMEOUT=60
+make -C e2e-tests test-sp-services QEMU_TIMEOUT=60
 ```
 
 ### Expected Output
@@ -212,7 +212,7 @@ These are defined in the SP's device tree manifest
 ## Code Coverage
 
 E2E tests automatically collect code coverage for the EC Secure Partition
-using a QEMU TCG plugin. Every `make test` run produces a coverage log at
+using a QEMU TCG plugin. Every `make test-sp-services` run produces a coverage log at
 `Build/coverage.log`.
 
 ### How it works

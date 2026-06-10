@@ -28,7 +28,7 @@ SBSA_SERIAL_TIMEOUT ?= 60
 VDRIVE_DIR := Build/vdrive
 
 # Tee QEMU serial output to stdout (auto-enabled in CI). Passed through to
-# scripts/test-e2e.sh, which owns the actual -serial / tee plumbing.
+# scripts/test-sp-services.sh, which owns the actual -serial / tee plumbing.
 ifeq ($(CI),true)
 SERIAL_TEE ?= 1
 else
@@ -75,22 +75,22 @@ $(COVERAGE_PLUGIN): builder-image
 	@$(DC_RUN) -w e2e-tests -- make -C coverage-plugin BUILD_DIR=../Build
 	$(call ENDGROUP)
 
-.PHONY: test
-test: $(VDRIVE_DIR) $(COVERAGE_PLUGIN)
+.PHONY: test-sp-services
+test-sp-services: $(VDRIVE_DIR) $(COVERAGE_PLUGIN)
 	@mkdir -p Build
-	@echo "=== Running E2E tests (timeout=$(QEMU_TIMEOUT)s) ==="
+	@echo "=== Running SP services E2E tests (timeout=$(QEMU_TIMEOUT)s) ==="
 ifeq ($(SERIAL_TEE),1)
 else
 	@echo "    (serial output streaming to Build/test-output.log)"
 endif
-	$(call GROUP,QEMU serial output)
-	@$(DC_RUN) -- scripts/test-e2e.sh \
+	$(call GROUP,SP services E2E tests)
+	@$(DC_RUN) -- scripts/test-sp-services.sh \
 		--bios-fv-dir $(BIOS_FV_DIR) \
 		--build-dir e2e-tests/Build \
 		--vdrive-dir e2e-tests/$(VDRIVE_DIR) \
 		--coverage-plugin e2e-tests/$(COVERAGE_PLUGIN) \
 		--coverage-log e2e-tests/$(COVERAGE_LOG) \
-		--qemu-timeout $(QEMU_TIMEOUT) \
+		--sbsa-timeout $(QEMU_TIMEOUT) \
 		--serial-tee $(SERIAL_TEE) \
 		-- $(QEMU_COMMON_ARGS)
 	$(call ENDGROUP)
@@ -106,12 +106,12 @@ endif
 #
 # Caller (top-level Makefile) is responsible for ensuring `ec` and `uefi`
 # are built; this target only runs the serial check.
-.PHONY: test-serial
-test-serial: | builder-image
+.PHONY: test-sp-ec-link
+test-sp-ec-link: | builder-image
 	@mkdir -p Build
-	@echo "=== Running serial link test (EC timeout=$(EC_SERIAL_TIMEOUT)s, SBSA timeout=$(SBSA_SERIAL_TIMEOUT)s) ==="
-	$(call GROUP,Serial link test)
-	@$(DC_RUN) -- scripts/test-serial.sh \
+	@echo "=== Running SP+EC link smoke test (EC timeout=$(EC_SERIAL_TIMEOUT)s, SBSA timeout=$(SBSA_SERIAL_TIMEOUT)s) ==="
+	$(call GROUP,SP+EC link smoke test)
+	@$(DC_RUN) -- scripts/test-sp-ec-link.sh \
 		--ec-elf $(EC_BINARY) \
 		--bios-fv-dir $(BIOS_FV_DIR) \
 		--build-dir e2e-tests/Build \
