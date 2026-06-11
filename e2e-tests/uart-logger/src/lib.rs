@@ -1,5 +1,5 @@
-//! Minimal `log` backend that writes to PL011 UART0 on the QEMU sbsa-ref
-//! machine (MMIO address `0x6000_0000`).
+//! Minimal `log` backend that writes to PL011 UART0 on the QEMU virt
+//! machine (MMIO address `0x0900_0000`).
 //!
 //! SPDX-License-Identifier: MIT
 //!
@@ -10,10 +10,10 @@
 use core::fmt::Write;
 use log::{LevelFilter, Log, Metadata, Record};
 
-/// PL011 UART0 data register on QEMU sbsa-ref.
-const UART0_DR: *mut u8 = 0x6000_0000 as *mut u8;
-/// PL011 UART0 flag register (FR) on QEMU sbsa-ref.
-const UART0_FR: *const u32 = 0x6000_0018 as *const u32;
+/// PL011 UART0 data register on QEMU virt.
+const UART0_DR: *mut u8 = 0x0900_0000 as *mut u8;
+/// PL011 UART0 flag register (FR) on QEMU virt.
+const UART0_FR: *const u32 = 0x0900_0018 as *const u32;
 /// Transmit FIFO full flag in the PL011 FR register.
 const UART_FR_TXFF: u32 = 1 << 5;
 
