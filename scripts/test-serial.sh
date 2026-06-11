@@ -154,6 +154,7 @@ timeout "$SBSA_TIMEOUT" \
         -drive "if=pflash,format=raw,unit=1,file=$BIOS_FV_DIR/QEMU_EFI.fd,readonly=on" \
         -chardev "socket,id=chrtpm,path=$SWTPM_SOCK" \
         -tpmdev "emulator,id=tpm0,chardev=chrtpm" \
+        -device "tpm-tis-device,tpmdev=tpm0" \
         -chardev "serial,id=ec-link,path=$PTY" \
         -serial "file:$SBSA_SERIAL_LOG" \
         -serial "chardev:ec-link" \
