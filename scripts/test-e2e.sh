@@ -114,6 +114,7 @@ QEMU_ARGS=(
     -drive "if=pflash,format=raw,unit=1,file=$QEMU_EFI,readonly=on"
     -chardev "socket,id=chrtpm,path=$SWTPM_SOCK"
     -tpmdev "emulator,id=tpm0,chardev=chrtpm"
+    -device "tpm-tis-device,tpmdev=tpm0"
     -drive "file=fat:rw:$VDRIVE_DIR,format=raw,media=disk"
     -display none
     -no-reboot
