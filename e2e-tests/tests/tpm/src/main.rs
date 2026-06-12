@@ -38,6 +38,7 @@ const TPM2_FFA_SUCCESS_OK_RESULTS: u64 = 0x0500_0002;
 const TPM2_FFA_NO_FUNC: u64 = 0x8e00_0001;
 const TPM2_FFA_NOT_SUP: u64 = 0x8e00_0002;
 const TPM2_FFA_INV_ARG: u64 = 0x8e00_0005;
+const TPM2_FFA_INV_CRB_CTRL_DATA: u64 = 0x8e00_0006;
 const TPM2_FFA_DENIED: u64 = 0x8e00_000a;
 
 // ---------------------------------------------------------------------------
@@ -156,7 +157,9 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         0,
         TPM2_FFA_NO_FUNC,
     );
-    // Start(COMMAND) on closed locality 0 → DENIED.
+    // Start(COMMAND) on closed locality 2 → DENIED (per DEN0138, DENIED is
+    // for "TPM has disabled requests at this locality"). Localities 2..=4
+    // are closed by default after SP init; localities 0..=1 are open.
     expect_status(
         results,
         "tpm_start_closed_locality",
@@ -164,7 +167,7 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         ec_id,
         TPM2_FFA_START,
         START_QUALIFIER_COMMAND,
-        0,
+        2,
         TPM2_FFA_DENIED,
     );
     // Start with out-of-range locality (>= 5) → INV_ARG.
@@ -178,7 +181,7 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         5,
         TPM2_FFA_INV_ARG,
     );
-    // Start(LOCALITY) on closed locality → DENIED.
+    // Start(LOCALITY) on closed locality 2 → DENIED (same reasoning as above).
     expect_status(
         results,
         "tpm_start_locality_qualifier_closed",
@@ -186,7 +189,7 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         ec_id,
         TPM2_FFA_START,
         START_QUALIFIER_LOCALITY,
-        0,
+        2,
         TPM2_FFA_DENIED,
     );
     // RegisterForNotification → NOT_SUP.
@@ -248,7 +251,12 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
     );
 
     // Tests requiring open locality (locality 0 was opened above)
-    // Start(COMMAND) on open locality with no active locality → INV_ARG.
+    // Start(COMMAND) on open locality with no command queued in CRB
+    // → INV_CRB_CTRL_DATA (per DEN0138, the CRB control data is invalid
+    // because no operation is requested). Note: the test name is historical;
+    // in the live SP+EC scenario, active_locality is set to 0 by the EC's
+    // earlier Start(LOCALITY,0) traffic, so this exercises the "no command
+    // queued" path rather than the "locality mismatch" branch.
     expect_status(
         results,
         "tpm_start_command_locality_mismatch",
@@ -257,7 +265,7 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         TPM2_FFA_START,
         START_QUALIFIER_COMMAND,
         0,
-        TPM2_FFA_INV_ARG,
+        TPM2_FFA_INV_CRB_CTRL_DATA,
     );
     // Start with invalid function qualifier → INV_ARG.
     expect_status(
@@ -270,7 +278,8 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         0,
         TPM2_FFA_INV_ARG,
     );
-    // Start(LOCALITY) with no CRB request/relinquish bits → DENIED.
+    // Start(LOCALITY) with no CRB request/relinquish bits → INV_CRB_CTRL_DATA
+    // (per DEN0138, the locality_control register has no operation requested).
     expect_status(
         results,
         "tpm_start_locality_no_crb_bits",
@@ -279,9 +288,10 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         TPM2_FFA_START,
         START_QUALIFIER_LOCALITY,
         0,
-        TPM2_FFA_DENIED,
+        TPM2_FFA_INV_CRB_CTRL_DATA,
     );
-    // Start(COMMAND) with no active locality → INV_ARG.
+    // Start(COMMAND) with no command queued in CRB → INV_CRB_CTRL_DATA.
+    // Same code path as tpm_start_command_locality_mismatch above.
     expect_status(
         results,
         "tpm_start_command_idle_no_bits",
@@ -290,7 +300,7 @@ fn run_tpm_tests(results: &mut TestResults, our_id: u16, ec_id: u16) {
         TPM2_FFA_START,
         START_QUALIFIER_COMMAND,
         0,
-        TPM2_FFA_INV_ARG,
+        TPM2_FFA_INV_CRB_CTRL_DATA,
     );
 
     // CRB state machine tests — exercises handle_command + tpm_sst
