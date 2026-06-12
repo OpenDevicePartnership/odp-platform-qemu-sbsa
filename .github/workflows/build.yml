@@ -134,6 +134,7 @@ jobs:
             GIT_COMMITTER_NAME=vscode
             GIT_COMMITTER_EMAIL=vscode@example.com
           runCmd: |
+            set -eo pipefail
             make all
             make e2e-test QEMU_TIMEOUT=900
             sccache --show-stats
