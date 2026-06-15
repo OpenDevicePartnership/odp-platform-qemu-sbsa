@@ -34,12 +34,12 @@ fn main() -> ! {
     let version = odp_ffa::Version::new().exec().unwrap();
     log::info!("FFA version: {}.{}", version.major(), version.minor());
 
-    let tpm_sst = ec_service_lib::services::TpmSst::new();
-    let mut tpm = ec_service_lib::services::TpmService::new(tpm_sst);
+    let tpm_sst = ec_service_lib::services::TpmSst::new(TPM_CRB_TPM_BASE);
+    let mut tpm = ec_service_lib::services::TpmService::new(tpm_sst, TPM_CRB_MMIO_BASE);
 
     // SAFETY: TPM_CRB_MMIO_BASE is mapped as a device region in the SP manifest (qemu-ec-sp.dts).
     unsafe {
-        tpm.init(TPM_CRB_MMIO_BASE, TPM_CRB_TPM_BASE);
+        tpm.init();
     }
 
     MessageHandler::new()
