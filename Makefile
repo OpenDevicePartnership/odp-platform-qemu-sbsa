@@ -39,6 +39,14 @@ run:
 	$(MAKE) -C mod/uefi run TPM_DEV=$(TPM_DEV)
 
 # ------------------------------------------------------------
+# Build OS image and boot it in QEMU
+# ------------------------------------------------------------
+run_os:
+	$(MAKE) -C postbuild/os build/winvos.qcow2
+	@mkdir -p "$(dir $(TPM_DEV))"
+	$(MAKE) -C mod/uefi run TPM_DEV=$(TPM_DEV) PATH_TO_OS=$(REPO_ROOT_IN_DEVCONTAINER)/postbuild/os/build/winvos.qcow2
+
+# ------------------------------------------------------------
 # Run E2E tests against the secure partition
 # ------------------------------------------------------------
 # Two phases:

@@ -1,0 +1,10 @@
+# OS package list for the ARM Virt platform WinVOS Boot Image
+#
+# SPDX-License-Identifier: MIT
+#
+
++include apps.pkg
++include graphics.pkg
++include InboxDrivers.pkg
++include usb.pkg
+Microsoft-WinVOS-DeveloperTools-Package [Extra]

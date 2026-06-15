@@ -28,6 +28,7 @@ $(BIOS_OUTPUTS):
 # ------------------------------------------------------------
 $(OS_IMAGE_INPUT):
 	@echo "Please copy ValidationOS.vhdx to the prebuilt directory before building the OS image."
+	@echo "See prebuilt/README.md for instructions."
 	@exit 1
 
 # ------------------------------------------------------------
@@ -38,31 +39,6 @@ $(OS_IMAGE_OUTPUT): $(OS_IMAGE_INPUT)
 	qemu-img convert -f vhdx -O qcow2 $< $(OS_IMAGE_OUTPUT)
 
 qcow2: $(OS_IMAGE_OUTPUT)
-
-# ------------------------------------------------------------
-# Run QEMU with image to boot to OS
-# ------------------------------------------------------------
-run: $(OS_IMAGE_OUTPUT) $(BIOS_OUTPUTS)
-	qemu-system-aarch64 \
-		$(QEMU_COMMON_ARGS) \
-		-drive if=pflash,format=raw,unit=0,file=$(BIOS_FLASH0) \
-		-drive if=pflash,format=raw,unit=1,file=$(BIOS_EFI),readonly=on \
-		-serial stdio \
-		-display vnc=:1 \
-		-hda build/winvos.qcow2
-
-# ------------------------------------------------------------
-# Attach windbg -k com:ipport=5800,port=127.0.0.1 -v
-# ------------------------------------------------------------
-run_debug: qcow2 $(BIOS_OUTPUTS)
-	qemu-system-aarch64 \
-		$(QEMU_COMMON_ARGS) \
-		-drive if=pflash,format=raw,unit=0,file=$(BIOS_FLASH0) \
-		-drive if=pflash,format=raw,unit=1,file=$(BIOS_EFI),readonly=on \
-		-gdb tcp:127.0.0.1:5555,server,nowait \
-		-serial tcp:127.0.0.1:5800,server,nowait \
-		-display vnc=:1 \
-		-hda build/winvos.qcow2
 
 # ------------------------------------------------------------
 # Clean everything
