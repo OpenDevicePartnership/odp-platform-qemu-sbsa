@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains the end-to-end (E2E) test suite for the QEMU SBSA
+This directory contains the end-to-end (E2E) test suite for the QEMU `virt`
 platform. Tests are compiled as UEFI applications that run inside QEMU and
 exercise the EC Secure Partition services via FF-A Direct Request messages.
 

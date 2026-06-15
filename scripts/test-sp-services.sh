@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# Owns the long-lived child processes (swtpm + SBSA QEMU), sets up the
+# Owns the long-lived child processes (swtpm + host QEMU), sets up the
 # cleanup trap, and performs post-run verification by parsing the
 # captured serial log.
 #
@@ -13,27 +13,27 @@
 
 set -o pipefail
 # Intentionally NOT `set -e`: we use `cmd || EXIT=$?` patterns and rely
-# on explicit exit codes for the QEMU run + log parsing. test-serial.sh
+# on explicit exit codes for the QEMU run + log parsing. test-sp-ec-link.sh
 # documents the same rationale (see v1.1 hardening cycle).
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/swtpm.sh
 source "$SCRIPT_DIR/lib/swtpm.sh"
-# shellcheck source=lib/sbsa-qemu.sh
-source "$SCRIPT_DIR/lib/sbsa-qemu.sh"
+# shellcheck source=lib/host-qemu.sh
+source "$SCRIPT_DIR/lib/host-qemu.sh"
 
 usage() {
     cat <<'EOF'
 Usage: test-sp-services.sh --bios-fv-dir DIR --build-dir DIR --vdrive-dir DIR \
                            --coverage-plugin PATH --coverage-log PATH \
-                           [--sbsa-timeout N] [--serial-tee 0|1] -- <qemu-common-args...>
+                           [--host-timeout N] [--serial-tee 0|1] -- <qemu-common-args...>
 
   --bios-fv-dir      Directory containing SECURE_FLASH0.fd and QEMU_EFI.fd
   --build-dir        Build/ directory (test-output.log, swtpm state, etc. live here)
   --vdrive-dir       FAT drive directory exposed to UEFI shell (test EFIs + startup.nsh)
   --coverage-plugin  Path to TCG coverage plugin (.so)
   --coverage-log     Path to write QEMU coverage PC trace
-  --sbsa-timeout     Seconds for SBSA QEMU run (default: 180)
+  --host-timeout     Seconds for host QEMU run (default: 180)
   --serial-tee       1 = tee QEMU serial to stdout AND file; 0 = file only (default: 0)
 
 After --, all remaining args are passed verbatim to qemu-system-aarch64
@@ -51,7 +51,7 @@ BUILD_DIR=""
 VDRIVE_DIR=""
 COVERAGE_PLUGIN=""
 COVERAGE_LOG=""
-SBSA_TIMEOUT=180
+HOST_TIMEOUT=180
 SERIAL_TEE=0
 
 while [[ $# -gt 0 ]]; do
@@ -61,7 +61,7 @@ while [[ $# -gt 0 ]]; do
         --vdrive-dir)      VDRIVE_DIR="$2";      shift 2 ;;
         --coverage-plugin) COVERAGE_PLUGIN="$2"; shift 2 ;;
         --coverage-log)    COVERAGE_LOG="$2";    shift 2 ;;
-        --sbsa-timeout)    SBSA_TIMEOUT="$2";    shift 2 ;;
+        --host-timeout)    HOST_TIMEOUT="$2";    shift 2 ;;
         --serial-tee)      SERIAL_TEE="$2";      shift 2 ;;
         --help|-h)         usage; exit 0 ;;
         --)                shift; break ;;
@@ -107,23 +107,23 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # ----- QEMU launch -----
-set_sbsa_pflash_tpm_args "$BIOS_FV_DIR" "$SWTPM_SOCK"
+set_host_pflash_tpm_args "$BIOS_FV_DIR" "$SWTPM_SOCK"
 
 QEMU_ARGS=(
     "${QEMU_COMMON_ARGS[@]}"
     -plugin "file=$COVERAGE_PLUGIN,outfile=$COVERAGE_LOG"
-    "${SBSA_PFLASH_TPM_ARGS[@]}"
+    "${HOST_PFLASH_TPM_ARGS[@]}"
     -drive "file=fat:rw:$VDRIVE_DIR,format=raw,media=disk"
     -display none
     -no-reboot
 )
 
 if [ "$SERIAL_TEE" = "1" ]; then
-    timeout "$SBSA_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" -serial stdio 2>&1 \
+    timeout "$HOST_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" -serial stdio 2>&1 \
         | tee "$TEST_OUTPUT" &
     QEMU_PID=$!
 else
-    timeout "$SBSA_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" \
+    timeout "$HOST_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" \
         -serial "file:$TEST_OUTPUT" &
     QEMU_PID=$!
 fi

@@ -12,7 +12,7 @@ reports results over serial.
 
 ```mermaid
 graph LR
-    subgraph QEMU["QEMU (sbsa-ref machine)"]
+    subgraph QEMU["QEMU (virt machine)"]
         subgraph NS["Non-Secure World"]
             Shell["UEFI Shell<br/>thermal.efi / tpm.efi"]
         end

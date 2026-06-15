@@ -1,4 +1,4 @@
-# Shared variables and targets included by all Makefiles in the ODP QEMU SBSA Platform build system.
+# Shared variables and targets included by all Makefiles in the ODP QEMU `virt` Platform build system.
 #
 # SPDX-License-Identifier: MIT
 #

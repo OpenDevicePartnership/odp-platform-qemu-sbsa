@@ -17,12 +17,12 @@ TPM_EFI := $(TARGET_DIR)/tpm.efi
 # Timeout for QEMU execution (seconds)
 QEMU_TIMEOUT ?= 180
 
-# Bounds on the serial-link test (test-serial). EC has done its useful work
+# Bounds on the serial-link test (test-sp-ec-link). EC has done its useful work
 # (boot, announce PTY, exchange a few messages) well within 30s, after which it
-# spins in tight async loops that starve SBSA of host CPU. Killing EC early lets
-# SBSA reach the UEFI shell and self-terminate within SBSA_SERIAL_TIMEOUT.
+# spins in tight async loops that starve the host of CPU. Killing EC early lets
+# host reach the UEFI shell and self-terminate within HOST_SERIAL_TIMEOUT.
 EC_SERIAL_TIMEOUT  ?= 30
-SBSA_SERIAL_TIMEOUT ?= 60
+HOST_SERIAL_TIMEOUT ?= 60
 
 # Virtual drive directory for UEFI Shell to find test EFI binaries
 VDRIVE_DIR := Build/vdrive
@@ -90,7 +90,7 @@ endif
 		--vdrive-dir e2e-tests/$(VDRIVE_DIR) \
 		--coverage-plugin e2e-tests/$(COVERAGE_PLUGIN) \
 		--coverage-log e2e-tests/$(COVERAGE_LOG) \
-		--sbsa-timeout $(QEMU_TIMEOUT) \
+		--host-timeout $(QEMU_TIMEOUT) \
 		--serial-tee $(SERIAL_TEE) \
 		-- $(QEMU_COMMON_ARGS)
 	$(call ENDGROUP)
@@ -100,23 +100,22 @@ endif
 # ------------------------------------------------------------
 # Launches EC QEMU with `-serial pty` (QEMU allocates a pseudo-tty
 # and prints its path to stderr), parses the path, then launches
-# SBSA QEMU with a `serial` chardev opening that PTY as serial1
-# (SBSA_SECURE_UART @ 0x60030000).
-# Verifies: PTY announced, EC booted, SBSA started without errors.
+# host QEMU with a `serial` chardev opening that PTY as serial1.
+# Verifies: PTY announced, EC booted, host started without errors.
 #
 # Caller (top-level Makefile) is responsible for ensuring `ec` and `uefi`
 # are built; this target only runs the serial check.
 .PHONY: test-sp-ec-link
 test-sp-ec-link: | builder-image
 	@mkdir -p Build
-	@echo "=== Running SP+EC link smoke test (EC timeout=$(EC_SERIAL_TIMEOUT)s, SBSA timeout=$(SBSA_SERIAL_TIMEOUT)s) ==="
+	@echo "=== Running SP+EC link smoke test (EC timeout=$(EC_SERIAL_TIMEOUT)s, host timeout=$(HOST_SERIAL_TIMEOUT)s) ==="
 	$(call GROUP,SP+EC link smoke test)
 	@$(DC_RUN) -- scripts/test-sp-ec-link.sh \
 		--ec-elf $(EC_BINARY) \
 		--bios-fv-dir $(BIOS_FV_DIR) \
 		--build-dir e2e-tests/Build \
 		--ec-timeout $(EC_SERIAL_TIMEOUT) \
-		--sbsa-timeout $(SBSA_SERIAL_TIMEOUT) \
+		--host-timeout $(HOST_SERIAL_TIMEOUT) \
 		-- $(QEMU_COMMON_ARGS)
 	$(call ENDGROUP)
 

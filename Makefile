@@ -1,4 +1,4 @@
-# Primary Makefile for the ODP QEMU SBSA Platform firmware build system.
+# Primary Makefile for the ODP QEMU `virt` Platform firmware build system.
 #
 # SPDX-License-Identifier: MIT
 #
@@ -42,7 +42,7 @@ run:
 # Run E2E tests against the secure partition
 # ------------------------------------------------------------
 # Two phases:
-#   1. Serial-link smoke test (EC<->SBSA via PTY) using the default
+#   1. Serial-link smoke test (EC<->host via PTY) using the default
 #      secure-services build.
 #   2. Full e2e suite — rebuild secure-services with test-bypass
 #      features, rebuild uefi with the test SP embedded, run tests.
