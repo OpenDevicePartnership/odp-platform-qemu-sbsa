@@ -12,7 +12,7 @@ You can manually download the ISO from the link here: https://aka.ms/DownloadVal
 After you have created a ValidatioOS.vhdx with your required files, simply copy it to the prebuilt folder and from the root folder run
     `make run_os`
 
-This will generate the qcow2 image from the vhdx and run your BIOS in the parent folder path and boot to a command prompt. Your output display will be redirected to VNC port 5900 by default. You can use and VNC Viewer to open the display `127.0.0.1:5000`. 
+This will generate the qcow2 image from the vhdx and run your BIOS in the parent folder path and boot to a command prompt. Your output display will be redirected to VNC port 5900 by default. You can use and VNC Viewer to open the display `127.0.0.1:5900`. 
 
 If you want you can force regeneration of the winvos.qcow2 image using
     `make qcow2`
