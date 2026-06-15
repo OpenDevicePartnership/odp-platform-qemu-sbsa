@@ -21,3 +21,8 @@ BaseTools/
 # Ignore dtb files they are generated from dts files
 *.dtb
 *.stamp
+
+# OS Images should not be included
+*.iso
+*.qcow2
+*.vhdx

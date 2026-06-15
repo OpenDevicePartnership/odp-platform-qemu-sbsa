@@ -68,5 +68,5 @@ e2e-test: ec uefi
 clean:
 	$(MAKE) -C mod clean
 	$(MAKE) -C e2e-tests clean
-
-.PHONY: all mod secure-services secure-services-test uefi ec run e2e-test clean
+	$(MAKE) -C postbuild/os clean
+.PHONY: all mod secure-services secure-services-test uefi ec run e2e-test run_os clean
