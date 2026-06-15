@@ -41,3 +41,23 @@ wait_for_swtpm_socket() {
     echo "ERROR: swtpm socket not created at $socket within $((timeout / 10))s" >&2
     return 1
 }
+
+# kill_swtpm
+#   Tears down swtpm if SWTPM_PID is set in the caller's scope. No-op
+#   otherwise. Safe to call from cleanup traps — kill errors are
+#   silenced (the swtpm may already be dead).
+kill_swtpm() {
+    [ -n "$SWTPM_PID" ] || return 0
+    kill "$SWTPM_PID" 2>/dev/null
+    wait "$SWTPM_PID" 2>/dev/null
+}
+
+# dump_swtpm_log_on_failure <swtpm-log-path>
+#   Used by the "wait_for_swtpm_socket || die" pattern in both test
+#   scripts. Dumps the swtpm log to stderr framed with markers.
+dump_swtpm_log_on_failure() {
+    local swtpm_log="$1"
+    echo "--- swtpm log ($swtpm_log) ---" >&2
+    cat "$swtpm_log" >&2 2>/dev/null || echo "(empty or missing)" >&2
+    echo "--- end swtpm log ---" >&2
+}

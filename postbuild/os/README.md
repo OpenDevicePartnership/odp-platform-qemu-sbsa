@@ -26,7 +26,7 @@ To mount and install the CAB files into the VHDX:
 
     `Dismount-VHD -Path "C:\Path\To\ValidationOS.vhdx`
 
-## Booting QEMU SBSA to Windows
+## Booting QEMU `virt` to Windows
 
 After you have create a ValidatioOS.vhdx with your required files, simply copy it to the prebuild folder and run
     `make run`
