@@ -1,0 +1,51 @@
+# Builds the PL061 GPIO driver as part of pull request validation.
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Build PL061 GPIO Driver
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mod/drivers/pl061gpio/**'
+      - '.github/workflows/build-pl061gpio.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'mod/drivers/pl061gpio/**'
+      - '.github/workflows/build-pl061gpio.yml'
+
+jobs:
+  build-pl061gpio:
+    name: Build Windows Drivers
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        platform: [x64, ARM64]
+        configuration: [Debug, Release]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x64
+
+      - name: Restore NuGet packages
+        working-directory: mod/drivers/pl061gpio
+        run: nuget restore pl061gpio.vcxproj -ConfigFile $env:APPDATA\NuGet\NuGet.Config
+
+      - name: Build PL061 GPIO Driver (${{ matrix.configuration }}|${{ matrix.platform }})
+        working-directory: mod/drivers/pl061gpio
+        run: msbuild pl061gpio.vcxproj /p:Configuration=${{ matrix.configuration }} /p:Platform=${{ matrix.platform }} /p:WarningLevel=4
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pl061gpio-${{ matrix.platform }}-${{ matrix.configuration }}
+          path: mod/drivers/pl061gpio/${{ matrix.platform }}/${{ matrix.configuration }}/pl061gpio.sys
+          if-no-files-found: ignore
