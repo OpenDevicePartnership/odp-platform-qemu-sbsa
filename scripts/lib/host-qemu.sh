@@ -4,9 +4,36 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# Required on PATH: qemu-system-aarch64
+# Required on PATH: qemu-system-aarch64, timeout
 #
 # Shell options (set -o pipefail, etc.) are owned by the caller.
+
+# require_host_qemu_tools
+#   Verifies the external tools this library (and the orchestrator that
+#   drives it) need are on PATH. On any miss, prints the missing
+#   commands to stderr and returns 1 so the orchestrator can fail loudly
+#   at startup.
+require_host_qemu_tools() {
+    local cmd missing=()
+    for cmd in qemu-system-aarch64 timeout; do
+        command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+    done
+    [ "${#missing[@]}" -eq 0 ] ||
+        { echo "ERROR: missing required tools for host QEMU: ${missing[*]}" >&2; return 1; }
+}
+
+# require_host_serial_tee_tools
+#   Extra tools needed only when the host orchestrator streams serial
+#   through a FIFO + tee (SERIAL_TEE=1). Kept separate from
+#   require_host_qemu_tools so SERIAL_TEE=0 runs don't demand them.
+require_host_serial_tee_tools() {
+    local cmd missing=()
+    for cmd in mkfifo tee; do
+        command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+    done
+    [ "${#missing[@]}" -eq 0 ] ||
+        { echo "ERROR: missing required tools for SERIAL_TEE=1: ${missing[*]}" >&2; return 1; }
+}
 
 # set_host_pflash_tpm_args <bios-fv-dir> <swtpm-sock>
 #   Sets HOST_PFLASH_TPM_ARGS in the caller's scope (no `local`,

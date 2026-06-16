@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# Required on PATH: qemu-system-riscv32, defmt-print, stdbuf, setsid, timeout
+# Required on PATH: qemu-system-riscv32, defmt-print, stdbuf, tee, setsid, timeout, pkill
 #
 # Functions intentionally assign EC_PID in the *caller's* shell scope
 # (no `local`) so the orchestrator's cleanup trap can reach the EC's
@@ -11,6 +11,22 @@
 #
 # Shell options (set -o pipefail, etc.) are owned by the caller; this
 # library does not modify them.
+
+# require_ec_qemu_tools
+#   Verifies the external tools this library needs are on PATH. In
+#   particular kill_ec_session relies on `pkill -s` to tear down the EC
+#   session's descendant process groups; without it teardown silently
+#   degrades and leaks `timeout` + `qemu-system-riscv32`. On any miss,
+#   prints the missing commands to stderr and returns 1 so the
+#   orchestrator can fail loudly at startup.
+require_ec_qemu_tools() {
+    local cmd missing=()
+    for cmd in qemu-system-riscv32 defmt-print stdbuf tee setsid timeout pkill; do
+        command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+    done
+    [ "${#missing[@]}" -eq 0 ] ||
+        { echo "ERROR: missing required tools for EC QEMU: ${missing[*]}" >&2; return 1; }
+}
 
 # start_ec_qemu <ec-elf> <stdout-log> <stderr-log> <serial-log> <timeout-secs>
 #   Launches the EC QEMU (riscv32) inside its own session/process group via

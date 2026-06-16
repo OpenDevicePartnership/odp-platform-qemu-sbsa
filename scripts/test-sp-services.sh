@@ -85,6 +85,14 @@ SWTPM_SOCK="$SWTPM_DIR/swtpm-sock"
 SWTPM_LOG="$BUILD_DIR/swtpm.log"
 TEST_OUTPUT="$BUILD_DIR/test-output.log"
 QEMU_EXIT_FILE="$BUILD_DIR/qemu-exit-code"
+SERIAL_FIFO="$BUILD_DIR/serial.fifo"
+
+# ----- tool preconditions -----
+# Fail loudly here if a required tool is missing, before any filesystem
+# side effects or process launches.
+require_swtpm_tools || exit 1
+require_host_qemu_tools || exit 1
+[ "$SERIAL_TEE" = "1" ] && { require_host_serial_tee_tools || exit 1; }
 
 mkdir -p "$BUILD_DIR"
 rm -f "$SWTPM_SOCK"
@@ -100,8 +108,10 @@ fi
 cleanup() {
     local sig=$?
     [ -n "${QEMU_PID:-}" ] && kill "$QEMU_PID" 2>/dev/null
+    [ -n "${TEE_PID:-}" ] && kill "$TEE_PID" 2>/dev/null
     kill_swtpm
     wait 2>/dev/null
+    [ -n "${SERIAL_FIFO:-}" ] && rm -f "$SERIAL_FIFO"
     exit "$sig"
 }
 trap cleanup EXIT INT TERM
@@ -119,8 +129,25 @@ QEMU_ARGS=(
 )
 
 if [ "$SERIAL_TEE" = "1" ]; then
-    timeout "$HOST_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" -serial stdio 2>&1 \
-        | tee "$TEST_OUTPUT" &
+    # Stream QEMU's serial output to BOTH stdout and $TEST_OUTPUT while
+    # keeping QEMU_PID pointing at the timeout/QEMU process — NOT tee.
+    #
+    # A bare `qemu ... | tee` pipeline sets $! to tee's PID, so the
+    # cleanup trap would kill only tee (leaking timeout + QEMU), and
+    # `wait $QEMU_PID` would observe tee's exit code instead of QEMU's
+    # (masking the timeout exit code 124 the result analysis relies on).
+    # Route serial through a FIFO into a backgrounded tee whose PID we
+    # track separately, then wait on that tee after QEMU exits so
+    # $TEST_OUTPUT is fully flushed before the grep-based analysis below.
+    rm -f "$SERIAL_FIFO"
+    if ! mkfifo "$SERIAL_FIFO"; then
+        echo "ERROR: failed to create serial FIFO at $SERIAL_FIFO" >&2
+        exit 1
+    fi
+    tee "$TEST_OUTPUT" < "$SERIAL_FIFO" &
+    TEE_PID=$!
+    timeout "$HOST_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" \
+        -serial stdio > "$SERIAL_FIFO" 2>&1 &
     QEMU_PID=$!
 else
     timeout "$HOST_TIMEOUT" qemu-system-aarch64 "${QEMU_ARGS[@]}" \
@@ -130,6 +157,12 @@ fi
 
 wait "$QEMU_PID"
 QEMU_EXIT=$?
+# Drain the tee (if any) so $TEST_OUTPUT is fully written before the
+# grep-based result analysis, then remove the FIFO.
+if [ -n "${TEE_PID:-}" ]; then
+    wait "$TEE_PID" 2>/dev/null
+    rm -f "$SERIAL_FIFO"
+fi
 echo "$QEMU_EXIT" > "$QEMU_EXIT_FILE"
 
 # Stop swtpm before result analysis (frees the socket).
