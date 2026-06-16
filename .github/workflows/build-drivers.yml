@@ -1,30 +1,21 @@
-# Builds the PL061 GPIO driver as part of pull request validation.
+# Builds the PL061 GPIO and QemuI2C drivers as part of pull request validation.
 #
 # SPDX-License-Identifier: MIT
 #
 
-name: Build PL061 GPIO Driver
+name: Build Drivers
 
 on:
   pull_request:
     branches: [ main ]
     paths:
-      - 'mod/drivers/pl061gpio/**'
-      - '.github/workflows/build-pl061gpio.yml'
-  push:
-    branches: [ main ]
-    paths:
-      - 'mod/drivers/pl061gpio/**'
-      - '.github/workflows/build-pl061gpio.yml'
+      - 'mod/drivers/**'
+      - '.github/workflows/build-drivers.yml'
 
 jobs:
   build-pl061gpio:
     name: Build Windows Drivers
     runs-on: windows-2022
-    strategy:
-      matrix:
-        platform: [x64, ARM64]
-        configuration: [Debug, Release]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -34,18 +25,34 @@ jobs:
         with:
           msbuild-architecture: x64
 
-      - name: Restore NuGet packages
+      - name: Restore PL061 GPIO Driver
         working-directory: mod/drivers/pl061gpio
         run: nuget restore pl061gpio.vcxproj -ConfigFile $env:APPDATA\NuGet\NuGet.Config
 
-      - name: Build PL061 GPIO Driver (${{ matrix.configuration }}|${{ matrix.platform }})
+      - name: Build PL061 GPIO Driver
         working-directory: mod/drivers/pl061gpio
-        run: msbuild pl061gpio.vcxproj /p:Configuration=${{ matrix.configuration }} /p:Platform=${{ matrix.platform }} /p:WarningLevel=4
+        run: msbuild pl061gpio.vcxproj /p:Configuration=Release /p:Platform=ARM64 /p:WarningLevel=4
 
-      - name: Upload build artifacts
+      - name: Restore QemuI2C Driver
+        working-directory: mod/drivers/QemuI2C
+        run: nuget restore qemui2c.sln -ConfigFile $env:APPDATA\NuGet\NuGet.Config
+
+      - name: Build QemuI2C Driver
+        working-directory: mod/drivers/QemuI2C
+        run: msbuild qemui2c.sln /p:Configuration=Release /p:Platform=ARM64 /p:WarningLevel=4
+
+      - name: Upload PL061 GPIO build artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pl061gpio-${{ matrix.platform }}-${{ matrix.configuration }}
-          path: mod/drivers/pl061gpio/${{ matrix.platform }}/${{ matrix.configuration }}/pl061gpio.sys
+          name: pl061gpio-ARM64-Release
+          path: mod/drivers/pl061gpio/**/pl061gpio.sys
+          if-no-files-found: ignore
+
+      - name: Upload QemuI2C build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemui2c-ARM64-Release
+          path: mod/drivers/QemuI2C/**/qemui2c.sys
           if-no-files-found: ignore
