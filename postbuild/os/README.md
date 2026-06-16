@@ -6,8 +6,7 @@ WinVOS is a pared down Windows OS image that is convenient for basic development
 
 You can manually download the ISO from the link here: https://aka.ms/DownloadValidationOS_arm64 and create your own winvos image or you can run the `winvos.ps1` script which will download and create the image for you with the default settings
 
-
-## Booting QEMU SBSA to Windows
+## Booting QEMU `virt` to Windows
 
 After you have created a ValidationOS.vhdx with your required files, simply copy it to the prebuilt folder and from the root folder run
     `make run_os`

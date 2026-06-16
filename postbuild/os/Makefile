@@ -1,4 +1,4 @@
-# OS image build targets for the ODP QEMU SBSA Platform.
+# OS image build targets for the ODP QEMU `virt` Platform.
 #
 # SPDX-License-Identifier: MIT
 #

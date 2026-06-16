@@ -68,3 +68,21 @@ discover_ec_pty() {
     } >&2
     return 1
 }
+
+# kill_ec_session
+#   Tears down the EC session (no-op if EC_PID is unset).
+#
+#   EC_PID is the session leader of a session created by `setsid` (in
+#   start_ec_qemu). Bash auto-enables job control for session-leader
+#   children, which puts each pipeline stage (timeout/tee/defmt-print)
+#   in its OWN process group inside the session — so a single
+#   `kill -- -$EC_PID` only signals the leader's own pgrp and leaks
+#   `timeout` + `qemu-system-riscv32`. Signal the whole session via
+#   `pkill -s` so every descendant process group is reached, then
+#   `kill -- -$EC_PID` as a belt-and-braces fallback.
+kill_ec_session() {
+    [ -n "$EC_PID" ] || return 0
+    pkill -TERM -s "$EC_PID" 2>/dev/null
+    kill -- "-$EC_PID" 2>/dev/null
+    wait "$EC_PID" 2>/dev/null
+}

@@ -4,7 +4,7 @@
 [![Check Submodules](https://github.com/OpenDevicePartnership/odp-platform-qemu-sbsa/actions/workflows/check-submodules.yml/badge.svg)](https://github.com/OpenDevicePartnership/odp-platform-qemu-sbsa/actions/workflows/check-submodules.yml)
 [![LICENSE](https://img.shields.io/badge/License-MIT-blue)](./LICENSE)
 
-This repo contains all the necessary content for working on QEMU for SBSA (arm64) platform
+This repo contains all the necessary content for working on QEMU `virt` (arm64) platform
 
 ## Quick Start Guide
 
@@ -21,7 +21,7 @@ From VS code menu run  `Terminal -> New Terminal` and run  `make all` from the r
 To run QEMU with the image you generated you can run `make run` from the root folder
 
 To run end-to-end tests against the secure partition: `make e2e-test`
-(builds everything, runs the EC↔SBSA serial-link smoke test, then
+(builds everything, runs the EC↔host serial-link smoke test, then
 launches QEMU and runs the full e2e test suite).
 See [docs/e2e-tests.md](docs/e2e-tests.md) for details.
 
