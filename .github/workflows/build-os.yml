@@ -23,11 +23,22 @@ on:
       - 'postbuild/os/**'
       - '.github/workflows/build-os.yml'
   workflow_dispatch:
+    inputs:
+      drivers_repo:
+        description: 'GitHub repository to download driver artifacts from (owner/repo)'
+        required: false
+        default: 'OpenDevicePartnership/odp-windows-drivers'
+        type: string
   workflow_call:
     inputs:
       git_ref:
         description: 'Git tag in vYYYY.MM.DD format'
         required: true
+        type: string
+      drivers_repo:
+        description: 'GitHub repository to download driver artifacts from (owner/repo)'
+        required: false
+        default: 'OpenDevicePartnership/odp-windows-drivers'
         type: string
 
 concurrency:
@@ -65,7 +76,7 @@ jobs:
             $destPath = Join-Path 'drivers' $name
             New-Item -ItemType Directory -Path $destPath -Force | Out-Null
             Write-Host "Downloading artifact: $name -> $destPath"
-            gh run download --repo OpenDevicePartnership/odp-windows-drivers --name $name --dir $destPath
+            gh run download --repo '${{ inputs.drivers_repo || 'OpenDevicePartnership/odp-windows-drivers' }}' --name $name --dir $destPath
             if ($LASTEXITCODE -ne 0) { throw "Failed to download artifact $name" }
           }
 
