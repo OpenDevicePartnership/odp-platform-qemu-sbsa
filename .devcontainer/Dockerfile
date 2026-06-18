@@ -36,6 +36,7 @@ RUN apt-get update && \
     dosfstools \
     mtools \
     flex \
+    gh \
     git \
     gnupg \
     gnupg2 \

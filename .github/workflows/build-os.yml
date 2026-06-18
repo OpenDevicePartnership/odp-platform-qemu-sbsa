@@ -1,0 +1,208 @@
+# Builds the ODP Validation OS VHDX image on a Windows runner.
+#
+# SPDX-License-Identifier: MIT
+#
+# Downloads pre-built driver artifacts from the odp-windows-drivers repository,
+# builds a Validation OS WIM, injects the QEMU drivers, converts to VHDX, and
+# uploads the result.  The list of driver artifacts to download is maintained in
+# postbuild/os/prebuilt/driverlist.txt.
+#
+# Third-party actions are pinned by commit SHA which is monitored by the dependabot.yml file.
+#
+
+name: build_os_image
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'postbuild/os/**'
+      - '.github/workflows/build-os.yml'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      git_ref:
+        description: 'Git tag in vYYYY.MM.DD format'
+        required: true
+        type: string
+
+concurrency:
+  group: build_os_image-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    name: Build QEMU ARM64 OS image
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          ref: ${{ inputs.git_ref || github.ref }}
+
+      - name: Download driver artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $driverListPath = 'postbuild\os\prebuilt\driverlist.txt'
+          $artifactNames = Get-Content -Path $driverListPath |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { $_ -and -not $_.StartsWith('#') }
+
+          if (-not $artifactNames) {
+            throw "No artifact names found in $driverListPath"
+          }
+
+          foreach ($name in $artifactNames) {
+            $destPath = Join-Path 'drivers' $name
+            New-Item -ItemType Directory -Path $destPath -Force | Out-Null
+            Write-Host "Downloading artifact: $name -> $destPath"
+            gh run download --repo OpenDevicePartnership/odp-windows-drivers --name $name --dir $destPath
+            if ($LASTEXITCODE -ne 0) { throw "Failed to download artifact $name" }
+          }
+
+      - name: Verify driver artifacts
+        run: |
+          Write-Host '=== Downloaded artifact tree ==='
+          Get-ChildItem -Path drivers -Recurse -File | ForEach-Object { Write-Host $_.FullName }
+
+          $driverListPath = Resolve-Path 'postbuild\os\prebuilt\driverlist.txt'
+          $artifactNames = Get-Content -Path $driverListPath |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { $_ -and -not $_.StartsWith('#') }
+
+          foreach ($name in $artifactNames) {
+            $root = Join-Path 'drivers' $name
+            if (-not (Test-Path $root)) {
+              throw "Driver directory '$root' not found after artifact download"
+            }
+            $infFiles = Get-ChildItem -Path $root -Recurse -Filter *.inf -File -ErrorAction SilentlyContinue
+            if ($infFiles) {
+              $infFiles | ForEach-Object { Write-Host "Found: $($_.FullName)" }
+            } else {
+              throw "No INF files found under $root"
+            }
+          }
+
+      - name: Download Validation OS ISO
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest 'https://aka.ms/DownloadValidationOS_arm64' -OutFile 'ValidationOS.iso'
+
+      - name: Build WIM
+        run: |
+          $mount = Mount-DiskImage -ImagePath (Resolve-Path ValidationOS.iso).Path -PassThru
+          $drive = ($mount | Get-Volume).DriveLetter
+          try {
+            cmd /c "${drive}:\GenImage\GenImage.cmd -PackagesList:postbuild\os\prebuilt\armvirt_config.pkg -PackagePath:${drive}:\cabs -ImagePath:${drive}:\ -RegistryImport:postbuild\os\prebuilt\armvirt_policy.reg -OutPath:postbuild\os\build -wim -NoWait"
+            if ($LASTEXITCODE -ne 0) { throw "GenImage.cmd failed with exit code $LASTEXITCODE" }
+          } finally {
+            Dismount-DiskImage -ImagePath $mount.ImagePath
+          }
+
+      - name: Inject QEMU drivers into WIM
+        run: |
+          $driverListPath = Resolve-Path 'postbuild\os\prebuilt\driverlist.txt'
+          $wimPath = Resolve-Path 'postbuild\os\build\ValidationOS-1.wim'
+          $mountPath = Join-Path $env:RUNNER_TEMP 'os-image-mount'
+
+          if (Test-Path $mountPath) {
+            Remove-Item -Path $mountPath -Recurse -Force
+          }
+
+          New-Item -ItemType Directory -Path $mountPath -Force | Out-Null
+
+          $artifactNames = Get-Content -Path $driverListPath |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { $_ -and -not $_.StartsWith('#') }
+
+          $driverRoots = $artifactNames | ForEach-Object { Resolve-Path (Join-Path 'drivers' $_) }
+
+          if (-not $driverRoots) {
+            throw "No driver paths resolved from $driverListPath"
+          }
+
+          $infPaths = foreach ($driverRoot in $driverRoots) {
+            Get-ChildItem -Path $driverRoot -Recurse -Filter *.inf -File
+          }
+
+          if (-not $infPaths) {
+            throw "No INF files found for any driver listed in $driverListPath"
+          }
+
+          $infPaths = $infPaths | Sort-Object FullName -Unique
+
+          try {
+            dism.exe /Mount-Image /ImageFile:$wimPath /Index:1 /MountDir:$mountPath
+            if ($LASTEXITCODE -ne 0) { throw "Failed to mount WIM with exit code $LASTEXITCODE" }
+
+            foreach ($infPath in $infPaths) {
+              Write-Host "Injecting driver $($infPath.FullName)"
+              dism.exe /Image:$mountPath /Add-Driver /Driver:$($infPath.FullName)
+              if ($LASTEXITCODE -ne 0) { throw "Failed to add driver $($infPath.FullName) with exit code $LASTEXITCODE" }
+            }
+
+            dism.exe /Unmount-Image /MountDir:$mountPath /Commit
+            if ($LASTEXITCODE -ne 0) { throw "Failed to commit WIM changes with exit code $LASTEXITCODE" }
+          } finally {
+            $mountedImage = Get-WindowsImage -Mounted | Where-Object { $_.Path -eq $mountPath }
+            if ($mountedImage) {
+              dism.exe /Unmount-Image /MountDir:$mountPath /Discard | Out-Null
+            }
+
+            if (Test-Path $mountPath) {
+              Remove-Item -Path $mountPath -Recurse -Force -ErrorAction SilentlyContinue
+            }
+          }
+
+      - name: Convert WIM to VHDX
+        run: |
+          $wimPath = Resolve-Path 'postbuild\os\build\ValidationOS-1.wim'
+          $vhdxPath = Join-Path (Get-Location) 'staging\os-image.vhdx'
+          $vhdxSizeBytes = 2GB
+
+          New-Item -ItemType Directory -Force -Path staging | Out-Null
+
+          $vhdx = New-VHD -Path $vhdxPath -SizeBytes $vhdxSizeBytes -Dynamic
+          $disk = Mount-VHD -Path $vhdxPath -Passthru
+          try {
+            $disk | Initialize-Disk -PartitionStyle GPT
+
+            $efiPart = $disk | New-Partition -Size 100MB -GptType '{c12a7328-f81f-11d2-ba4b-00a0c93ec93b}' -AssignDriveLetter
+            $efiPart | Format-Volume -FileSystem FAT32 -NewFileSystemLabel 'EFI' -Confirm:$false | Out-Null
+            $efiLetter = $efiPart.DriveLetter
+
+            $osPart = $disk | New-Partition -UseMaximumSize -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}' -AssignDriveLetter
+            $osPart | Format-Volume -FileSystem NTFS -NewFileSystemLabel 'ValidationOS' -Confirm:$false | Out-Null
+            $osLetter = $osPart.DriveLetter
+
+            Write-Host "EFI partition: ${efiLetter}:  OS partition: ${osLetter}:"
+
+            Write-Host "Applying WIM to ${osLetter}:\"
+            dism.exe /Apply-Image /ImageFile:"$wimPath" /Index:1 /ApplyDir:"${osLetter}:\"
+            if ($LASTEXITCODE -ne 0) { throw "Failed to apply WIM with exit code $LASTEXITCODE" }
+
+            Write-Host "Creating boot files on ${efiLetter}:\"
+            bcdboot "${osLetter}:\Windows" /s "${efiLetter}:" /f UEFI
+            if ($LASTEXITCODE -ne 0) { throw "bcdboot failed with exit code $LASTEXITCODE" }
+          } finally {
+            Dismount-VHD -Path $vhdxPath
+          }
+
+          Write-Host "VHDX created: $vhdxPath ($('{0:N1} MB' -f ((Get-Item $vhdxPath).Length / 1MB)))"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: os-image
+          path: staging/os-image.vhdx
+          retention-days: 1
+          if-no-files-found: error
