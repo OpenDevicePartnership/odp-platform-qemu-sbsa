@@ -11,6 +11,20 @@
 # Shell options (set -o pipefail, etc.) are owned by the caller; this
 # library does not modify them.
 
+# require_swtpm_tools
+#   Verifies the external tools this library needs are on PATH. On any
+#   miss, prints the missing commands to stderr and returns 1 so the
+#   orchestrator can fail loudly at startup instead of producing a
+#   confusing mid-run failure.
+require_swtpm_tools() {
+    local cmd missing=()
+    for cmd in swtpm; do
+        command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+    done
+    [ "${#missing[@]}" -eq 0 ] ||
+        { echo "ERROR: missing required tools for swtpm: ${missing[*]}" >&2; return 1; }
+}
+
 # start_swtpm <state-dir> <socket-path> <log-path>
 #   Launches swtpm in the background and sets SWTPM_PID in the caller's
 #   shell. Does NOT wait for the socket to become ready — call
