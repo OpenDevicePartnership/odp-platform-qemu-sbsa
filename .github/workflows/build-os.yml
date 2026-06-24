@@ -7,7 +7,7 @@
 # uploads the result.  The list of driver artifacts to download is maintained in
 # postbuild/os/prebuilt/driverlist.txt.
 #
-# Third-party actions are pinned by commit SHA which is monitored by the dependabot.yml file.
+# Third-party actions are pinned by commit SHA.
 #
 
 name: build_os_image
@@ -59,18 +59,29 @@ jobs:
         with:
           ref: ${{ inputs.git_ref || github.ref }}
 
-      - name: Download driver artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Resolve driver artifacts
         run: |
-          $driverListPath = 'postbuild\os\prebuilt\driverlist.txt'
-          $artifactNames = Get-Content -Path $driverListPath |
+          $artifactNames = Get-Content -Path 'postbuild\os\prebuilt\driverlist.txt' |
             ForEach-Object { $_.Trim() } |
             Where-Object { $_ -and -not $_.StartsWith('#') }
 
           if (-not $artifactNames) {
-            throw "No artifact names found in $driverListPath"
+            throw 'No artifact names found in postbuild\os\prebuilt\driverlist.txt'
           }
+
+          $artifactNamesFile = Join-Path $env:RUNNER_TEMP 'artifact-names.txt'
+          $artifactNames -join "`n" | Out-File -FilePath $artifactNamesFile -Encoding utf8
+          "DRIVER_ARTIFACT_NAMES_FILE=$artifactNamesFile" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Download driver artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if (-not (Test-Path $env:DRIVER_ARTIFACT_NAMES_FILE)) {
+            throw "Driver artifact list '$env:DRIVER_ARTIFACT_NAMES_FILE' does not exist"
+          }
+
+          $artifactNames = Get-Content -Path $env:DRIVER_ARTIFACT_NAMES_FILE
 
           foreach ($name in $artifactNames) {
             $destPath = Join-Path 'drivers' $name
@@ -78,29 +89,6 @@ jobs:
             Write-Host "Downloading artifact: $name -> $destPath"
             gh run download --repo '${{ inputs.drivers_repo || 'OpenDevicePartnership/odp-windows-drivers' }}' --name $name --dir $destPath
             if ($LASTEXITCODE -ne 0) { throw "Failed to download artifact $name" }
-          }
-
-      - name: Verify driver artifacts
-        run: |
-          Write-Host '=== Downloaded artifact tree ==='
-          Get-ChildItem -Path drivers -Recurse -File | ForEach-Object { Write-Host $_.FullName }
-
-          $driverListPath = Resolve-Path 'postbuild\os\prebuilt\driverlist.txt'
-          $artifactNames = Get-Content -Path $driverListPath |
-            ForEach-Object { $_.Trim() } |
-            Where-Object { $_ -and -not $_.StartsWith('#') }
-
-          foreach ($name in $artifactNames) {
-            $root = Join-Path 'drivers' $name
-            if (-not (Test-Path $root)) {
-              throw "Driver directory '$root' not found after artifact download"
-            }
-            $infFiles = Get-ChildItem -Path $root -Recurse -Filter *.inf -File -ErrorAction SilentlyContinue
-            if ($infFiles) {
-              $infFiles | ForEach-Object { Write-Host "Found: $($_.FullName)" }
-            } else {
-              throw "No INF files found under $root"
-            }
           }
 
       - name: Download Validation OS ISO
@@ -115,14 +103,25 @@ jobs:
           try {
             cmd /c "${drive}:\GenImage\GenImage.cmd -PackagesList:postbuild\os\prebuilt\armvirt_config.pkg -PackagePath:${drive}:\cabs -ImagePath:${drive}:\ -RegistryImport:postbuild\os\prebuilt\armvirt_policy.reg -OutPath:postbuild\os\build -wim -NoWait"
             if ($LASTEXITCODE -ne 0) { throw "GenImage.cmd failed with exit code $LASTEXITCODE" }
+
+            $wim = Get-ChildItem -Path 'postbuild\os\build' -Filter *.wim -File | Select-Object -First 1
+            if (-not $wim) { throw 'GenImage produced no .wim in postbuild\os\build' }
+            "WIM_PATH=$($wim.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           } finally {
             Dismount-DiskImage -ImagePath $mount.ImagePath
           }
 
       - name: Inject QEMU drivers into WIM
         run: |
-          $driverListPath = Resolve-Path 'postbuild\os\prebuilt\driverlist.txt'
-          $wimPath = Resolve-Path 'postbuild\os\build\ValidationOS-1.wim'
+          if (-not $env:WIM_PATH) {
+            throw 'WIM_PATH is not set'
+          }
+
+          if (-not (Test-Path $env:DRIVER_ARTIFACT_NAMES_FILE)) {
+            throw "Driver artifact list '$env:DRIVER_ARTIFACT_NAMES_FILE' does not exist"
+          }
+
+          $wimPath = Resolve-Path $env:WIM_PATH
           $mountPath = Join-Path $env:RUNNER_TEMP 'os-image-mount'
 
           if (Test-Path $mountPath) {
@@ -131,14 +130,12 @@ jobs:
 
           New-Item -ItemType Directory -Path $mountPath -Force | Out-Null
 
-          $artifactNames = Get-Content -Path $driverListPath |
-            ForEach-Object { $_.Trim() } |
-            Where-Object { $_ -and -not $_.StartsWith('#') }
+          $artifactNames = Get-Content -Path $env:DRIVER_ARTIFACT_NAMES_FILE
 
           $driverRoots = $artifactNames | ForEach-Object { Resolve-Path (Join-Path 'drivers' $_) }
 
           if (-not $driverRoots) {
-            throw "No driver paths resolved from $driverListPath"
+            throw "No driver paths resolved from $env:DRIVER_ARTIFACT_NAMES_FILE"
           }
 
           $infPaths = foreach ($driverRoot in $driverRoots) {
@@ -146,7 +143,7 @@ jobs:
           }
 
           if (-not $infPaths) {
-            throw "No INF files found for any driver listed in $driverListPath"
+            throw "No INF files found for any driver listed in $env:DRIVER_ARTIFACT_NAMES_FILE"
           }
 
           $infPaths = $infPaths | Sort-Object FullName -Unique
@@ -176,7 +173,11 @@ jobs:
 
       - name: Convert WIM to VHDX
         run: |
-          $wimPath = Resolve-Path 'postbuild\os\build\ValidationOS-1.wim'
+          if (-not $env:WIM_PATH) {
+            throw 'WIM_PATH is not set'
+          }
+
+          $wimPath = Resolve-Path $env:WIM_PATH
           $vhdxPath = Join-Path (Get-Location) 'staging\os-image.vhdx'
           $vhdxSizeBytes = 2GB
 
@@ -215,5 +216,5 @@ jobs:
         with:
           name: os-image
           path: staging/os-image.vhdx
-          retention-days: 1
+          retention-days: 14
           if-no-files-found: error
