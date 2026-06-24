@@ -88,6 +88,14 @@ case "$HOST_TIMEOUT" in
     ''|*[!0-9]*|0) echo "ERROR: --host-timeout must be a positive integer (got: $HOST_TIMEOUT)" >&2; exit 1 ;;
 esac
 
+# ----- tool preconditions -----
+# Fail loudly here if a required tool is missing, rather than letting the
+# session teardown degrade silently mid-run (e.g. a missing pkill leaks
+# the EC QEMU pipeline into the devcontainer).
+require_swtpm_tools || exit 1
+require_ec_qemu_tools || exit 1
+require_host_qemu_tools || exit 1
+
 SWTPM_STATE="$BUILD_DIR/swtpm-state"
 SWTPM_SOCK="$SWTPM_STATE/swtpm-sock"
 SWTPM_LOG="$BUILD_DIR/swtpm.log"
