@@ -4,7 +4,7 @@
 
 WinVOS is a pared down Windows OS image that is convenient for basic development while also booting relatively quickly under QEMU.  
 
-You can manually download the ISO from the link here: https://aka.ms/DownloadValidationOS_arm64 and create your own winvos image or you can run the `winvos.ps1` script which will download and create the image for you with the default settings
+The image is built by the `build_os_image` GitHub Actions workflow (`.github/workflows/build-os.yml`), which injects the QEMU drivers listed in `prebuilt/driverlist.txt`. Running `make run_os` or `make qcow2` will download the latest built artifact. To build manually, download the ISO from https://aka.ms/DownloadValidationOS_arm64.
 
 
 ## Booting QEMU `virt` to Windows
