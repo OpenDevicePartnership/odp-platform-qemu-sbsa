@@ -10,6 +10,17 @@ include ../../Common.mk
 # override TPM_DEV at invocation time, e.g. `make run TPM_DEV=/tmp/swtpm.sock`.
 TPM_DEV ?= /tmp/mytpm1/swtpm-sock
 
+# Unix sockets used to connect QEMU's virtual I2C controller and PL061 GPIO
+# to an external embedded controller (EC) QEMU instance. The EC side creates
+# the socket servers; this QEMU connects to them as a client (server=off).
+# Set to empty to disable (e.g. `make run EC_I2C_SOCK= EC_GPIO_SOCK=`).
+EC_I2C_SOCK ?= /tmp/qemu-ec-i2c.sock
+EC_GPIO_SOCK ?= /tmp/qemu-ec-gpio.sock
+
+# QEMU wrapper that injects the EC co-simulation chardev sockets without
+# patching the patina-qemu submodule's QemuRunner plugin. Passed to stuart as
+# the QEMU_PATH build var; the real qemu binary is forwarded via REAL_QEMU.
+QEMU_EC_WRAPPER_DC := $(REPO_ROOT_IN_DEVCONTAINER)/scripts/qemu-ec-wrapper.sh
 all: patina-qemu-ec
 
 # ------------------------------------------------------------
@@ -45,8 +56,9 @@ builder-shell: builder-image
 	@$(DC_RUN) --shell
 
 run: builder-image
-	@$(DC_RUN) -w mod/uefi/patina-qemu -- \
-		stuart_build -c Platforms/QemuArmVirtPkg/PlatformBuild.py --flashonly GDB_SERVER=5555 SERIAL_PORT=56789 TPM_DEV=$(TPM_DEV) PATH_TO_OS=$(PATH_TO_OS)
+	@REAL_QEMU=$(QEMU_PATH) EC_I2C_SOCK=$(EC_I2C_SOCK) EC_GPIO_SOCK=$(EC_GPIO_SOCK) \
+		$(DC_RUN) -w mod/uefi/patina-qemu -- \
+		stuart_build -c Platforms/QemuArmVirtPkg/PlatformBuild.py --flashonly GDB_SERVER=5555 SERIAL_PORT=56789 TPM_DEV=$(TPM_DEV) PATH_TO_OS=$(PATH_TO_OS) QEMU_PATH=$(QEMU_EC_WRAPPER_DC)
 
 clean:
 	@echo "=== Cleaning UEFI build artifacts ==="
