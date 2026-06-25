@@ -34,9 +34,11 @@ patina-qemu-ec: builder-image
 	@$(DC_RUN) -w mod/uefi/patina-qemu -- stuart_build -c Platforms/QemuArmVirtPkg/PlatformBuild.py \
 		HAF_TFA_BUILD=TRUE \
 		BLD_*_TPM2_ENABLE=TRUE \
+		DISABLE_DEBUG_MACRO_CHECK=TRUE \
 		MSSP_RUST_BIN_FILE=$(REPO_ROOT_IN_DEVCONTAINER)/mod/secure-services/Build/qemu-ec-sp.bin \
 		MSSP_RUST_DTS_FILE=$(REPO_ROOT_IN_DEVCONTAINER)/mod/secure-services/Build/qemu-ec-sp.dts \
 		FEATURE_CONFIG_PATH=$(REPO_ROOT_IN_DEVCONTAINER)/mod/uefi/platform
+	@$(DC_RUN) -w mod/uefi/platform -- ./build_acpi_tables.sh
 	$(call ENDGROUP)
 
 builder-shell: builder-image
