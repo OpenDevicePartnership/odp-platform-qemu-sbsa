@@ -2,13 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 #
-
 include Common.mk
-
-# TPM socket path used by QEMU's emulator TPM backend during `make run`.
-# Override at invocation time if needed, e.g.:
-#   make run TPM_DEV=/tmp/other-swtpm/swtpm-sock
-TPM_DEV ?= /tmp/mytpm1/swtpm-sock
 
 # ------------------------------------------------------------
 # Default target — builds all artifacts (does not run tests).
@@ -35,16 +29,14 @@ secure-services secure-services-test uefi ec:
 # Run QEMU using UEFI flash-only flow
 # ------------------------------------------------------------
 run:
-	@mkdir -p "$(dir $(TPM_DEV))"
-	$(MAKE) -C mod/uefi run TPM_DEV=$(TPM_DEV)
+	$(MAKE) -C mod/uefi run
 
 # ------------------------------------------------------------
 # Build OS image and boot it in QEMU
 # ------------------------------------------------------------
 run_os:
 	$(MAKE) -C postbuild/os build/winvos.qcow2
-	@mkdir -p "$(dir $(TPM_DEV))"
-	$(MAKE) -C mod/uefi run TPM_DEV=$(TPM_DEV) PATH_TO_OS=$(REPO_ROOT_IN_DEVCONTAINER)/postbuild/os/build/winvos.qcow2
+	$(MAKE) -C mod/uefi run PATH_TO_OS=$(REPO_ROOT_IN_DEVCONTAINER)/postbuild/os/build/winvos.qcow2
 
 # ------------------------------------------------------------
 # Run E2E tests against the secure partition

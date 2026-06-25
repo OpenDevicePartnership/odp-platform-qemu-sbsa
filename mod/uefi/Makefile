@@ -21,6 +21,7 @@ EC_GPIO_SOCK ?= /tmp/qemu-ec-gpio.sock
 # patching the patina-qemu submodule's QemuRunner plugin. Passed to stuart as
 # the QEMU_PATH build var; the real qemu binary is forwarded via REAL_QEMU.
 QEMU_EC_WRAPPER_DC := $(REPO_ROOT_IN_DEVCONTAINER)/scripts/qemu-ec-wrapper.sh
+
 all: patina-qemu-ec
 
 # ------------------------------------------------------------
@@ -56,6 +57,7 @@ builder-shell: builder-image
 	@$(DC_RUN) --shell
 
 run: builder-image
+	@mkdir -p "$(dir $(TPM_DEV))"
 	@REAL_QEMU=$(QEMU_PATH) EC_I2C_SOCK=$(EC_I2C_SOCK) EC_GPIO_SOCK=$(EC_GPIO_SOCK) \
 		$(DC_RUN) -w mod/uefi/patina-qemu -- \
 		stuart_build -c Platforms/QemuArmVirtPkg/PlatformBuild.py --flashonly GDB_SERVER=5555 SERIAL_PORT=56789 TPM_DEV=$(TPM_DEV) PATH_TO_OS=$(PATH_TO_OS) QEMU_PATH=$(QEMU_EC_WRAPPER_DC)
