@@ -19,7 +19,7 @@
   SUPPORTED_ARCHITECTURES        = AARCH64
   BUILD_TARGETS                  = DEBUG|RELEASE|NOOPT
   SKUID_IDENTIFIER               = DEFAULT
-  FLASH_DEFINITION               = OdpArmVirtPkg.fdf
+  FLASH_DEFINITION               = QemuArmVirtPkg/OdpArmVirtPkg.fdf
 
   DEFINE TTY_TERMINAL            = FALSE
 !ifndef TPM2_ENABLE
