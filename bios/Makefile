@@ -20,8 +20,8 @@ all: patina-qemu
 patina-qemu:
 	@echo "=== Building BIOS ==="
 	cd patina-qemu && \
-	stuart_setup -c Platforms/QemuSbsaPkg/PlatformBuild.py \
-	stuart_update -c Platforms/QemuSbsaPkg/PlatformBuild.py \
+	stuart_setup -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
+	stuart_update -c Platforms/QemuSbsaPkg/PlatformBuild.py && \
 	stuart_build -c Platforms/QemuSbsaPkg/PlatformBuild.py HAF_TFA_BUILD=TRUE MSSP_RUST_BIN_FILE=$(QEMU_RUST_BIN) MSSP_RUST_DTS_FILE=$(QEMU_RUST_DTS)
 
 run:
