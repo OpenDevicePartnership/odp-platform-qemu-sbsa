@@ -4,33 +4,58 @@ This directory holds the platform overlay that is prepended to the patina-qemu
 edk2 `PACKAGES_PATH`. Files here can override or extend the platform build
 without editing the `mod/uefi/patina-qemu` workspace.
 
-## ACPI table rebuild helper
+## ACPI table build helper
 
-Use `build_acpi_tables.sh` to rebuild
-`QemuArmVirtPkg/AcpiTables/AcpiTables.inf` and patch the resulting freeform FFS
-into an existing `QEMU_EFI.fd` image.
+Use `build_acpi_tables.sh` to build ACPI tables (`QemuArmVirtPkg/AcpiTables`)
+and create a separate ODP firmware volume (`odp.fd`) for the QEMU arm-virt machine.
 
 The script:
+- Injects the ACPI tables component into the platform DSC
+- Builds only `QemuArmVirtPkg/AcpiTables/AcpiTables.inf`
+- Creates a standalone firmware volume containing the ACPI FFS
+- Outputs `odp.fd` to the standard build directory
 
-- uses `QemuArmVirtPkg.dsc` from `patina-qemu`, and if the overlay copy is
-  absent it stages a temporary replacement from that upstream file,
-- builds only `QemuArmVirtPkg/AcpiTables/AcpiTables.inf`,
-- finds the generated `7E374E25-8E01-4FEE-87F2-390C23C606CD` freeform FFS, and
-- patches the selected firmware image in place by replacing that FFS inside the
-  `FvMain` firmware volume, falling back to `add` when the FFS is not already
-  present.
+Prerequisites:
+- `stuart_setup` and `stuart_update` must be run first
+- UEFI platform build already initialized in patina-qemu
 
-The script assumes `stuart_setup` and `stuart_update` have already been run.
-
-Examples:
+### Quick start
 
 ```sh
+cd /workspaces/odp-platform-qemu-sbsa
 mod/uefi/platform/build_acpi_tables.sh
-mod/uefi/platform/build_acpi_tables.sh --firmware /tmp/QEMU_EFI.fd
 ```
 
-By default the input firmware is:
+Output file:
+```
+mod/uefi/patina-qemu/Build/QemuArmVirtPkg/DEBUG_CLANGPDB/FV/odp.fd
+```
+
+### Using with QEMU arm-virt
+
+Load the ODP ACPI tables as pflash unit 2:
 
 ```sh
-mod/uefi/patina-qemu/Build/QemuArmVirtPkg/DEBUG_CLANGPDB/FV/QEMU_EFI.fd
+qemu-system-aarch64 \
+  -machine virt \
+  -drive if=pflash,format=raw,unit=0,file=SECURE_FLASH0.fd \
+  -drive if=pflash,format=raw,unit=1,file=QEMU_EFI.fd,readonly=on \
+  -drive if=pflash,format=raw,unit=2,file=odp.fd,readonly=on \
+  ...
 ```
+
+When using test scripts, pass the ODP firmware volume to `set_host_pflash_tpm_args`:
+
+```sh
+source scripts/lib/host-qemu.sh
+set_host_pflash_tpm_args "$BIOS_FV_DIR" "$SWTPM_SOCK" "mod/uefi/patina-qemu/Build/QemuArmVirtPkg/DEBUG_CLANGPDB/FV/odp.fd"
+```
+
+### Build configuration
+
+To override the build target/toolchain (default: DEBUG/CLANGPDB):
+
+```sh
+BUILD_TARGET=RELEASE BUILD_TOOLCHAIN=GCC5 mod/uefi/platform/build_acpi_tables.sh
+```
+

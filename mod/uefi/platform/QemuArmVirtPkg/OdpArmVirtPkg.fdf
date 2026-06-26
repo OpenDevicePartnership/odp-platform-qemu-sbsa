@@ -1,0 +1,43 @@
+#
+#  ODP ACPI Tables Flash Description File
+#  Defines the firmware volume layout for building odp.fd
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+
+[FD.ODP]
+BaseAddress   = 0x0
+Size          = 0x1000
+ErasePolarity = 1
+BlockSize     = 0x1000
+NumBlocks     = 1
+
+0x0|0x1000
+FV = ODPFV
+
+[FV.ODPFV]
+BlockSize         = 0x1000
+NumBlocks         = 1
+FvAlignment       = 16
+ERASE_POLARITY    = 1
+MEMORY_MAPPED     = TRUE
+STICKY_WRITE      = TRUE
+LOCK_CAP          = TRUE
+LOCK_STATUS       = TRUE
+WRITE_DISABLED_CAP = TRUE
+WRITE_ENABLED_CAP = TRUE
+WRITE_STATUS      = TRUE
+WRITE_LOCK_CAP    = TRUE
+WRITE_LOCK_STATUS = TRUE
+READ_DISABLED_CAP = TRUE
+READ_ENABLED_CAP  = TRUE
+READ_STATUS       = TRUE
+READ_LOCK_CAP     = TRUE
+READ_LOCK_STATUS  = TRUE
+
+INF QemuArmVirtPkg/AcpiTables/AcpiTables.inf
+
+[Rule.Common.USER_DEFINED]
+  FILE RAW = $(NAMED_GUID) {
+    $(INF_OUTPUT)/ec.aml
+  }
