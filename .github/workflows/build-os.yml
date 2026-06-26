@@ -207,11 +207,11 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "bcdboot failed with exit code $LASTEXITCODE" }
 
             Write-Host "Enabling testsigning"
-            bcdedit /store ${efiLetter}:\EFI\Microsoft\Boot\BCD/set "{default}" testsigning on
+            bcdedit /store ${efiLetter}:\EFI\Microsoft\Boot\BCD /set "{default}" testsigning on
             if ($LASTEXITCODE -ne 0) { throw "Enabling testsigning failed with exit code $LASTEXITCODE" }
 
             Write-Host "Enabling debug"
-            bcdedit /store ${efiLetter}:\EFI\Microsoft\Boot\BCD/set "{default}" debug on
+            bcdedit /store ${efiLetter}:\EFI\Microsoft\Boot\BCD /set "{default}" debug on
             if ($LASTEXITCODE -ne 0) { throw "Enabling debug failed with exit code $LASTEXITCODE" }
           } finally {
             Dismount-VHD -Path $vhdxPath
