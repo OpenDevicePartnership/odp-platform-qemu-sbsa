@@ -21,6 +21,7 @@ on:
     branches: [main]
     paths:
       - 'postbuild/os/**'
+      - 'mod/uefi/platform/QemuArmVirtPkg/AcpiTables/**'
       - '.github/workflows/build-os.yml'
   workflow_dispatch:
     inputs:
@@ -109,6 +110,24 @@ jobs:
             "WIM_PATH=$($wim.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           } finally {
             Dismount-DiskImage -ImagePath $mount.ImagePath
+          }
+
+      - name: Build ACPITABL.dat
+        run: |
+          $scriptPath = 'mod\uefi\platform\QemuArmVirtPkg\AcpiTables\build_acpi_tables.ps1'
+          if (-not (Test-Path $scriptPath)) {
+            throw "Missing ACPI build script: $scriptPath"
+          }
+
+          & $scriptPath
+          if ($LASTEXITCODE -ne 0) { throw "ACPI build script failed with exit code $LASTEXITCODE" }
+
+          if (-not $env:ACPITABL_DAT_PATH) {
+            throw 'ACPITABL_DAT_PATH was not exported by build_acpi_tables.ps1'
+          }
+
+          if (-not (Test-Path $env:ACPITABL_DAT_PATH)) {
+            throw "ACPITABL.dat does not exist at $env:ACPITABL_DAT_PATH"
           }
 
       - name: Inject QEMU drivers into WIM
@@ -201,6 +220,15 @@ jobs:
             Write-Host "Applying WIM to ${osLetter}:\"
             dism.exe /Apply-Image /ImageFile:"$wimPath" /Index:1 /ApplyDir:"${osLetter}:\"
             if ($LASTEXITCODE -ne 0) { throw "Failed to apply WIM with exit code $LASTEXITCODE" }
+
+            if (-not $env:ACPITABL_DAT_PATH) {
+              throw 'ACPITABL_DAT_PATH is not set'
+            }
+
+            $acpiTargetDir = "${osLetter}:\Windows\System"
+            New-Item -Path $acpiTargetDir -ItemType Directory -Force | Out-Null
+            Copy-Item -Path $env:ACPITABL_DAT_PATH -Destination (Join-Path $acpiTargetDir 'ACPITABL.dat') -Force
+            Write-Host "Copied ACPITABL.dat to ${acpiTargetDir}"
 
             Write-Host "Creating boot files on ${efiLetter}:\"
             bcdboot "${osLetter}:\Windows" /s "${efiLetter}:" /f UEFI
