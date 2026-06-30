@@ -114,12 +114,29 @@ jobs:
 
       - name: Build ACPITABL.dat
         run: |
+          # iasl ships as an edk2 NuGet external-dependency that is not present in a
+          # fresh checkout (the patina-qemu submodule does not commit extdep binaries).
+          # Use the bundled copy if it exists, otherwise download the same pinned
+          # version of the ACPICA iasl compiler from the public projectmu NuGet feed.
           $iaslDir = 'mod\uefi\patina-qemu\MU_BASECORE\BaseTools\Bin\edk2-acpica-iasl_extdep\Windows-x86'
-          if (-not (Test-Path $iaslDir)) {
-            throw "Bundled iasl directory not found: $iaslDir"
+          if (Test-Path (Join-Path $iaslDir 'iasl.exe')) {
+            $iaslDir = (Resolve-Path $iaslDir).Path
+          } else {
+            $iaslVersion = '20230628.0.1'
+            $iaslUrl = "https://pkgs.dev.azure.com/projectmu/acpica/_packaging/mu_iasl/nuget/v3/flat2/edk2-acpica-iasl/$iaslVersion/edk2-acpica-iasl.$iaslVersion.nupkg"
+            $iaslRoot = Join-Path $env:RUNNER_TEMP 'iasl'
+            $iaslZip = Join-Path $env:RUNNER_TEMP 'edk2-acpica-iasl.zip'
+            Write-Host "Bundled iasl not found; downloading $iaslUrl"
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -Uri $iaslUrl -OutFile $iaslZip
+            if (Test-Path $iaslRoot) { Remove-Item -Path $iaslRoot -Recurse -Force }
+            Expand-Archive -Path $iaslZip -DestinationPath $iaslRoot -Force
+            $iaslDir = Join-Path $iaslRoot 'edk2-acpica-iasl\Windows-x86'
+            if (-not (Test-Path (Join-Path $iaslDir 'iasl.exe'))) {
+              throw "iasl.exe not found after extracting $iaslUrl"
+            }
+            $iaslDir = (Resolve-Path $iaslDir).Path
           }
-
-          $iaslDir = (Resolve-Path $iaslDir).Path
           "PATH=$iaslDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           $env:PATH = "$iaslDir;$env:PATH"
 
