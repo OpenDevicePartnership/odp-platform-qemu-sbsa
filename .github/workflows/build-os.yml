@@ -114,6 +114,18 @@ jobs:
 
       - name: Build ACPITABL.dat
         run: |
+          $iaslDir = 'mod\uefi\patina-qemu\MU_BASECORE\BaseTools\Bin\edk2-acpica-iasl_extdep\Windows-x86'
+          if (-not (Test-Path $iaslDir)) {
+            throw "Bundled iasl directory not found: $iaslDir"
+          }
+
+          $iaslDir = (Resolve-Path $iaslDir).Path
+          "PATH=$iaslDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          $env:PATH = "$iaslDir;$env:PATH"
+
+          iasl -v
+          if ($LASTEXITCODE -ne 0) { throw "iasl verification failed with exit code $LASTEXITCODE" }
+
           $scriptPath = 'mod\uefi\platform\QemuArmVirtPkg\AcpiTables\build_acpi_tables.ps1'
           if (-not (Test-Path $scriptPath)) {
             throw "Missing ACPI build script: $scriptPath"
