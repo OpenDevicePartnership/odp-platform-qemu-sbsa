@@ -49,6 +49,10 @@ Copy-Item -Path $amlPath -Destination $datPath -Force
 $datPath = (Resolve-Path $datPath).Path
 Write-Host "[acpi-build] ACPITABL.dat: $datPath"
 
+# Export for the remainder of this process (callers that dot/&-invoke this
+# script in the same step) and, when running under GitHub Actions, for
+# subsequent workflow steps.
+$env:ACPITABL_DAT_PATH = $datPath
 if ($env:GITHUB_ENV) {
     "ACPITABL_DAT_PATH=$datPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 }
