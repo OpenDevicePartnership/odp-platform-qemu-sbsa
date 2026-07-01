@@ -21,6 +21,7 @@ on:
     branches: [main]
     paths:
       - 'postbuild/os/**'
+      - 'mod/uefi/platform/QemuArmVirtPkg/AcpiTables/**'
       - '.github/workflows/build-os.yml'
   workflow_dispatch:
     inputs:
@@ -109,6 +110,53 @@ jobs:
             "WIM_PATH=$($wim.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           } finally {
             Dismount-DiskImage -ImagePath $mount.ImagePath
+          }
+
+      - name: Build ACPITABL.dat
+        run: |
+          # iasl ships as an edk2 NuGet external-dependency that is not present in a
+          # fresh checkout (the patina-qemu submodule does not commit extdep binaries).
+          # Use the bundled copy if it exists, otherwise download the same pinned
+          # version of the ACPICA iasl compiler from the public projectmu NuGet feed.
+          $iaslDir = 'mod\uefi\patina-qemu\MU_BASECORE\BaseTools\Bin\edk2-acpica-iasl_extdep\Windows-x86'
+          if (Test-Path (Join-Path $iaslDir 'iasl.exe')) {
+            $iaslDir = (Resolve-Path $iaslDir).Path
+          } else {
+            $iaslVersion = '20230628.0.1'
+            $iaslUrl = "https://pkgs.dev.azure.com/projectmu/acpica/_packaging/mu_iasl/nuget/v3/flat2/edk2-acpica-iasl/$iaslVersion/edk2-acpica-iasl.$iaslVersion.nupkg"
+            $iaslRoot = Join-Path $env:RUNNER_TEMP 'iasl'
+            $iaslZip = Join-Path $env:RUNNER_TEMP 'edk2-acpica-iasl.zip'
+            Write-Host "Bundled iasl not found; downloading $iaslUrl"
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -Uri $iaslUrl -OutFile $iaslZip
+            if (Test-Path $iaslRoot) { Remove-Item -Path $iaslRoot -Recurse -Force }
+            Expand-Archive -Path $iaslZip -DestinationPath $iaslRoot -Force
+            $iaslDir = Join-Path $iaslRoot 'edk2-acpica-iasl\Windows-x86'
+            if (-not (Test-Path (Join-Path $iaslDir 'iasl.exe'))) {
+              throw "iasl.exe not found after extracting $iaslUrl"
+            }
+            $iaslDir = (Resolve-Path $iaslDir).Path
+          }
+          "PATH=$iaslDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          $env:PATH = "$iaslDir;$env:PATH"
+
+          iasl -v
+          if ($LASTEXITCODE -ne 0) { throw "iasl verification failed with exit code $LASTEXITCODE" }
+
+          $scriptPath = 'mod\uefi\platform\QemuArmVirtPkg\AcpiTables\build_acpi_tables.ps1'
+          if (-not (Test-Path $scriptPath)) {
+            throw "Missing ACPI build script: $scriptPath"
+          }
+
+          & $scriptPath
+          if ($LASTEXITCODE -ne 0) { throw "ACPI build script failed with exit code $LASTEXITCODE" }
+
+          if (-not $env:ACPITABL_DAT_PATH) {
+            throw 'ACPITABL_DAT_PATH was not exported by build_acpi_tables.ps1'
+          }
+
+          if (-not (Test-Path $env:ACPITABL_DAT_PATH)) {
+            throw "ACPITABL.dat does not exist at $env:ACPITABL_DAT_PATH"
           }
 
       - name: Inject QEMU drivers into WIM
@@ -202,9 +250,26 @@ jobs:
             dism.exe /Apply-Image /ImageFile:"$wimPath" /Index:1 /ApplyDir:"${osLetter}:\"
             if ($LASTEXITCODE -ne 0) { throw "Failed to apply WIM with exit code $LASTEXITCODE" }
 
+            if (-not $env:ACPITABL_DAT_PATH) {
+              throw 'ACPITABL_DAT_PATH is not set'
+            }
+
+            $acpiTargetDir = "${osLetter}:\Windows\System"
+            New-Item -Path $acpiTargetDir -ItemType Directory -Force | Out-Null
+            Copy-Item -Path $env:ACPITABL_DAT_PATH -Destination (Join-Path $acpiTargetDir 'ACPITABL.dat') -Force
+            Write-Host "Copied ACPITABL.dat to ${acpiTargetDir}"
+
             Write-Host "Creating boot files on ${efiLetter}:\"
             bcdboot "${osLetter}:\Windows" /s "${efiLetter}:" /f UEFI
             if ($LASTEXITCODE -ne 0) { throw "bcdboot failed with exit code $LASTEXITCODE" }
+
+            Write-Host "Enabling testsigning"
+            bcdedit /store ${efiLetter}:\EFI\Microsoft\Boot\BCD /set "{default}" testsigning on
+            if ($LASTEXITCODE -ne 0) { throw "Enabling testsigning failed with exit code $LASTEXITCODE" }
+
+            Write-Host "Enabling debug"
+            bcdedit /store ${efiLetter}:\EFI\Microsoft\Boot\BCD /set "{default}" debug on
+            if ($LASTEXITCODE -ne 0) { throw "Enabling debug failed with exit code $LASTEXITCODE" }
           } finally {
             Dismount-VHD -Path $vhdxPath
           }

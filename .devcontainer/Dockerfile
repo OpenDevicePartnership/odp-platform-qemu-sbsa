@@ -144,8 +144,8 @@ COPY mod/uefi/patina-qemu/pip-requirements.txt /tmp/pip-requirements.txt
 RUN pip install --upgrade -r /tmp/pip-requirements.txt pip lcov_cobertura
 USER root
 
-COPY --from=ghcr.io/opendevicepartnership/odp-qemu-builder/qemu@sha256:94b4d88aea7fadc7788dfe7fd470168a36ad5b1e0a5e5763ef190557d33f367a /usr/local/bin/qemu-system-aarch64 /usr/local/bin/qemu-system-aarch64
-COPY --from=ghcr.io/opendevicepartnership/odp-qemu-builder/qemu@sha256:94b4d88aea7fadc7788dfe7fd470168a36ad5b1e0a5e5763ef190557d33f367a /usr/local/bin/qemu-system-riscv32 /usr/local/bin/qemu-system-riscv32
-COPY --from=ghcr.io/opendevicepartnership/odp-qemu-builder/qemu@sha256:94b4d88aea7fadc7788dfe7fd470168a36ad5b1e0a5e5763ef190557d33f367a /usr/local/share/qemu/ /usr/local/share/qemu/
+COPY --from=ghcr.io/opendevicepartnership/odp-qemu-builder/qemu@sha256:91343c9470940727e607aa3c9515eeb58f2c4c39daf94c96aac8dee7052e61d3 /usr/local/bin/qemu-system-aarch64 /usr/local/bin/qemu-system-aarch64
+COPY --from=ghcr.io/opendevicepartnership/odp-qemu-builder/qemu@sha256:91343c9470940727e607aa3c9515eeb58f2c4c39daf94c96aac8dee7052e61d3 /usr/local/bin/qemu-system-riscv32 /usr/local/bin/qemu-system-riscv32
+COPY --from=ghcr.io/opendevicepartnership/odp-qemu-builder/qemu@sha256:91343c9470940727e607aa3c9515eeb58f2c4c39daf94c96aac8dee7052e61d3 /usr/local/share/qemu/ /usr/local/share/qemu/
 
 USER vscode
