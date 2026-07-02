@@ -254,7 +254,7 @@ jobs:
               throw 'ACPITABL_DAT_PATH is not set'
             }
 
-            $acpiTargetDir = "${osLetter}:\Windows\System"
+            $acpiTargetDir = "${osLetter}:\Windows\System32"
             New-Item -Path $acpiTargetDir -ItemType Directory -Force | Out-Null
             Copy-Item -Path $env:ACPITABL_DAT_PATH -Destination (Join-Path $acpiTargetDir 'ACPITABL.dat') -Force
             Write-Host "Copied ACPITABL.dat to ${acpiTargetDir}"
